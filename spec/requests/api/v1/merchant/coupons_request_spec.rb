@@ -80,4 +80,22 @@ RSpec.describe "Coupons", type: :request do
         expect(json_response['errors']).to include("Couldn't find Merchant with 'id'=9999")
       end
     end
+
+    describe 'POST' do 
+      it 'creates a new coupon' do 
+        merchant = Merchant.create!(name: "Sample Merchant")
+        coupon_params = { name: "Buy One Get One 50", code: "BOGO50", discount_value: 50, active: true }
+
+        post "/api/v1/merchants/#{merchant.id}/coupons", params: { coupon: coupon_params }
+
+        expect(response).to have_http_status(201)
+
+        created_coupon = Coupon.last
+        expect(created_coupon.name).to eq("Buy One Get One 50")
+        expect(created_coupon.code).to eq("BOGO50")
+        expect(created_coupon.discount_value).to eq(50)
+        expect(created_coupon.active).to be_truthy
+        expect(created_coupon.merchant_id).to eq(merchant.id)
+      end
+    end
 end
