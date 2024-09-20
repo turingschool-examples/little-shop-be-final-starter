@@ -1,4 +1,6 @@
 class CouponsController < ApplicationController
+  before_action :set_coupon, only: [:show, :activate, :deactivate]
+  
   def index
     @coupons = Coupon.where(merchant_id: params[:merchant_id])
     render json: @coupons
@@ -35,9 +37,11 @@ class CouponsController < ApplicationController
 
   private
 
+  def set_coupon
+    @coupon = Coupon.find(params[:id])
+  end
+
   def coupon_params
     params.require(:coupon).permit(:name, :code, :active, :merchant_id)
   end
-
-
 end
