@@ -3,11 +3,11 @@ class CouponsController < ApplicationController
   
   def index
     @coupons = Coupon.where(merchant_id: params[:merchant_id])
-    render json: @coupons
+    render json: CouponSerializer.new(@coupons)
   end
 
   def show
-    render json: @coupon
+    render json: CouponSerializer.new(@coupons)
   end
 
   def create
@@ -15,7 +15,7 @@ class CouponsController < ApplicationController
     @coupon.merchant_id = params[:merchant_id]
 
     if @coupon.save
-      render json: @coupon, status: :created
+      render json: CouponSerializer.new(@coupons), status: :created
     else
       render json: @coupon.errors, status: :unprocessable_entity
     end
@@ -23,13 +23,13 @@ class CouponsController < ApplicationController
 
   def deactivate
     @coupon = Coupon.update(active: false)
-    render json: @coupon
+    render json: CouponSerializer.new(@coupons)
   end
 
   def activate
     if @coupon.merchant.coupons.where(active: true).count < 5
       @coupon = Coupon.update(active: true)
-      render json: @coupon
+      render json: CouponSerializer.new(@coupons)
     else
       render json: { error: "Maximum of 5 active coupons allowed." }, status: :forbidden
     end
