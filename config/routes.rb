@@ -21,10 +21,10 @@ Rails.application.routes.draw do
         resources :find_all, only: :index, controller: :search
       end
       resources :merchants, except: [:new, :edit] do
-        resources :items, only: :index, controller: "merchants/items"
+        resources(:items, {only: :index, controller: "merchants/items"})
         resources :customers, only: :index, controller: "merchants/customers"
         resources :invoices, only: :index, controller: "merchants/invoices"
-        resources :coupons, only: [:index, :show, :create] do
+        resources :coupons, only: [:index, :show, :create], controller: "merchants/coupons" do
           member do
             patch :deactivate
             patch :activate
