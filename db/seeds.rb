@@ -12,3 +12,22 @@ puts "Loading PostgreSQL Data dump into local database with command:"
 puts cmd
 system(cmd)
 
+require 'faker'
+
+merchants = Merchant.all
+
+if merchants.any?
+  merchants.each do |merchant|
+    10.times do
+      Coupon.create!(
+        name: Faker::Commerce.promotion_code,
+        code: Faker::Alphanumeric.alphanumeric(number: 10).upcase,
+        active: [true, false].sample,
+        merchant: merchant
+      )
+    end
+  end
+  puts "10 coupons created for each merchant!"
+else
+  puts "No merchants found. Please seed merchants first!"
+end
