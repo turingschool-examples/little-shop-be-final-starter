@@ -1,37 +1,24 @@
 require 'rails_helper'
 
+require 'rails_helper'
+
 RSpec.describe Coupon, type: :model do
-  before(:each) do 
-    @merchant = Merchant.create!(name: "Sample Merchant")
-  end
-  describe 'relationships' do 
-    it {should belong_to(:merchant)}
-    it {should have_many(:invoices)}
+  before do
+    @merchant = Merchant.create(name: "Test Merchant")
   end
 
-  describe 'validations' do
-    it 'is valid with valid attributes' do
-      coupon = Coupon.new(name: "Sample Coupon", code: "COUPON001", merchant: @merchant)
-      expect(coupon).to be_valid
-    end
+  it { should belong_to(:merchant) }
+  it { should have_many(:invoices) }
 
-    it 'is not valid without a name' do
-      coupon = Coupon.new(name: nil, code: "COUPON001", merchant: @merchant)
-      expect(coupon).to_not be_valid
-      expect(coupon.errors[:name]).to include("can't be blank")
-    end
+  it { should validate_presence_of(:name) }
+  it { should validate_presence_of(:code) }
+  it { should validate_inclusion_of(:active).in_array([true, false]) }
 
-    it 'is not valid without a code' do
-      coupon = Coupon.new(name: "Sample Coupon", code: nil, merchant: @merchant)
-      expect(coupon).to_not be_valid
-      expect(coupon.errors[:code]).to include("can't be blank")
-    end
-
-    it 'is not valid with a duplicate code for the same merchant' do
-      Coupon.create!(name: "Existing Coupon", code: "COUPON001", merchant: @merchant)
-      coupon = Coupon.new(name: "New Coupon", code: "COUPON001", merchant: @merchant)
-      expect(coupon).to_not be_valid
-      expect(coupon.errors[:code]).to include("has already been taken")
-    end
+  it 'validates uniqueness of code scoped to merchant_id' do
+    Coupon.create!(name: "Existing Coupon", code: "UNIQUECODE", active: true, merchant: @merchant)
+    new_coupon = Coupon.new(name: "New Coupon", code: "UNIQUECODE", active: true, merchant: @merchant)
+    
+    expect(new_coupon).not_to be_valid
+    expect(new_coupon.errors[:code]).to include("has already been taken")
   end
 end
