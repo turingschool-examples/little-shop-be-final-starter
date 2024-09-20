@@ -11,7 +11,7 @@ RSpec.describe Coupon, type: :model do
 
   describe 'validations' do
     it 'is valid with valid attributes' do
-      coupon = Coupon.new(name: "Sample Coupon", code: "COUPON001", merchant: @merchant)
+      coupon = Coupon.new(name: "Sample Coupon", code: "COUPON001",discount_value: 1, active: true, merchant: @merchant)
       expect(coupon).to be_valid
     end
 
@@ -28,8 +28,8 @@ RSpec.describe Coupon, type: :model do
     end
 
     it 'is not valid with a duplicate code for the same merchant' do
-      Coupon.create!(name: "Existing Coupon", code: "COUPON001", merchant: @merchant)
-      coupon = Coupon.new(name: "New Coupon", code: "COUPON001", merchant: @merchant)
+      Coupon.create!(name: "Sample Coupon", code: "COUPON001",discount_value: 1, active: true, merchant: @merchant)
+      coupon = Coupon.new(name: "New Coupon", code: "COUPON001", active: true, merchant: @merchant)
       expect(coupon).to_not be_valid
       expect(coupon.errors[:code]).to include("has already been taken")
     end
