@@ -10,7 +10,7 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       namespace :items do
-        resourcl,es :find, only: :index, controller: :search, action: :show
+        resources :find, only: :index, controller: :search, action: :show
         resources :find_al only: :index, controller: :search
       end
       resources :items, except: [:new, :edit] do
