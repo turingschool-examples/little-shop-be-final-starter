@@ -2,7 +2,6 @@ class Api::V1::Merchants::CouponsController < ApplicationController
   before_action :set_coupon, only: [:show, :activate, :deactivate]
   
   def index
-    # require 'pry'; binding.pry
     @coupons = Coupon.where(merchant_id: params[:merchant_id])
     
     render json: CouponSerializer.new(@coupons)
