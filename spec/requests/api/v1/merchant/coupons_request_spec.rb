@@ -25,4 +25,24 @@ RSpec.describe "Coupons", type: :request do
       end
     end
   end
+
+  describe "GET /api/v1/merchants/:merchant_id/coupons/:id" do
+    let(:merchant) { FactoryBot.create(:merchant) }
+    let(:coupon) { FactoryBot.create(:coupon,merchant: merchant) }
+
+    it 'returns a specific coupons details' do
+      get "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}"
+    
+      puts response.body
+
+      expect(response).to be_successful
+      json_response = JSON.parse(response.body)
+  
+      expect(json_response["data"]["id"]).to eq(coupon.id.to_s)
+      expect(json_response["data"]["type"]).to eq("coupon")
+      expect(json_response["data"]["attributes"]["name"]).to eq(coupon.name)
+      expect(json_response["data"]["attributes"]["code"]).to eq(coupon.code)
+      expect(json_response["data"]["attributes"]["active"]).to eq(coupon.active)
+    end
+  end
 end
