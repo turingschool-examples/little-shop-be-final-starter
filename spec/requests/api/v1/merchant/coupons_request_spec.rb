@@ -102,4 +102,41 @@ RSpec.describe "Coupons", type: :request do
       expect(coupon.active).to be false
     end
   end
+
+  describe "PATCH /api/v1/merchants/:merchant_id/coupons:id/activate" do
+    let(:merchant) { FactoryBot.create(:merchant) }
+    let!(:active_coupons) { FactoryBot.create_list(:coupon, 4, merchant: merchant, active: true) } 
+    let(:inactive_coupon) { FactoryBot.create(:coupon, merchant: merchant, active: false) }
+
+    it 'activates the coupon successfully when there are fewer than 5 active coupons' do
+      patch "/api/v1/merchants/#{merchant.id}/coupons/#{inactive_coupon.id}/activate"
+
+      expect(response).to be_successful
+      json_response = JSON.parse(response.body)
+
+      expect(json_response['data']['id']).to eq(inactive_coupon.id.to_s)
+      expect(json_response['data']['attributes']['active']).to be true
+
+      inactive_coupon.reload
+      expect(inactive_coupon.active).to be true
+    end
+
+    context 'when there are 5 active coupons' do
+      before do
+        FactoryBot.create(:coupon, merchant: merchant, active: true)
+      end
+  
+      it 'does not activate the coupon and returns an error' do
+        patch "/api/v1/merchants/#{merchant.id}/coupons/#{inactive_coupon.id}/activate"
+  
+        expect(response).to have_http_status(:forbidden)
+        json_response = JSON.parse(response.body)
+  
+        expect(json_response['error']).to eq("Maximum of 5 active coupons allowed.")
+        
+        inactive_coupon.reload
+        expect(inactive_coupon.active).to be false
+      end
+    end
+  end
 end
