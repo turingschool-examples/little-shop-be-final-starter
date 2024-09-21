@@ -72,5 +72,14 @@ RSpec.describe "Coupons", type: :request do
       expect(json_response["data"]).to have_key("attributes")
       expect(json_response["data"]["attributes"]["name"]).to eq("Sample Coupon")
     end
+
+    it 'does not create a coupon when request in valid' do
+      expect {
+        post "/api/v1/merchants/#{@merchant.id}/coupons", params: { coupon: @invalid_attributes }
+      }.to change(Coupon, :count).by(0)
+      expect(response).to have_http_status(:unprocessable_entity)
+      json_response = JSON.parse(response.body)
+      expect(json_response).to have_key("name")
+    end
   end
 end
