@@ -8,4 +8,12 @@ class Coupon < ApplicationRecord
   def self.for_merchant(merchant_id)
     where(merchant_id: merchant_id)
   end
+
+  def activate_coupon
+    if merchant.coupons.where(active: true).count < 5
+      update(active: true)
+    else
+      false
+    end
+  end
 end

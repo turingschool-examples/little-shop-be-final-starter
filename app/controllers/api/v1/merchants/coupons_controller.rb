@@ -28,9 +28,8 @@ class Api::V1::Merchants::CouponsController < ApplicationController
   end
 
   def activate
-    if @coupon.merchant.coupons.where(active: true).count < 5
-      @coupon = Coupon.update(active: true)
-      render json: CouponSerializer.new(@coupons)
+    if @coupon.activate_coupon
+      render json: CouponSerializer.new(@coupon)
     else
       render json: { error: "Maximum of 5 active coupons allowed." }, status: :forbidden
     end

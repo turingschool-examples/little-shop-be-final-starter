@@ -16,4 +16,21 @@ RSpec.describe Coupon, type: :model do
       expect(result).not_to include(*merchant_2_coupons)
     end
   end
+
+  describe '#activate_coupon' do
+    let(:merchant) { FactoryBot.create(:merchant) }
+    let!(:active_coupons) { FactoryBot.create_list(:coupon, 4, merchant: merchant, active: true) }
+    let(:inactive_coupon) { FactoryBot.create(:coupon, merchant: merchant, active: false, name: "Inactive Coupon", code: "INACTIVE123") }
+
+    it 'activates the coupon when there are less than 5 active coupons' do
+      expect(inactive_coupon.activate_coupon).to be_truthy
+      expect(inactive_coupon.reload.active).to be true
+    end
+
+    it 'does not activate the coupon and returns false when there are 5 active coupons' do
+      FactoryBot.create(:coupon, merchant: merchant, active: true)
+      expect(inactive_coupon.activate_coupon).to be_falsey
+      expect(inactive_coupon.reload.active).to be false
+    end
+  end
 end
