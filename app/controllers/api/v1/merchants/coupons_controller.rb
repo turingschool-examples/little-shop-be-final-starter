@@ -16,7 +16,7 @@ class Api::V1::Merchants::CouponsController < ApplicationController
     @coupon.merchant_id = params[:merchant_id]
 
     if @coupon.save
-      render json: CouponSerializer.new(@coupons), status: :created
+      render json: CouponSerializer.new(@coupon), status: :created
     else
       render json: @coupon.errors, status: :unprocessable_entity
     end

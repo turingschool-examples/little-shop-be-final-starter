@@ -32,8 +32,6 @@ RSpec.describe "Coupons", type: :request do
 
     it 'returns a specific coupons details' do
       get "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}"
-    
-      puts response.body
 
       expect(response).to be_successful
       json_response = JSON.parse(response.body)
@@ -43,6 +41,36 @@ RSpec.describe "Coupons", type: :request do
       expect(json_response["data"]["attributes"]["name"]).to eq(coupon.name)
       expect(json_response["data"]["attributes"]["code"]).to eq(coupon.code)
       expect(json_response["data"]["attributes"]["active"]).to eq(coupon.active)
+    end
+  end
+
+  describe "POST /api/v1/merchants/:merchant_id/coupons" do
+    before do
+      @merchant = FactoryBot.create(:merchant)
+      @valid_attributes = {
+        name: "Sample Coupon",
+        code: "ABC123",
+        active: true
+      }
+
+      @invalid_attributes = {
+        name: nil,
+        code: "ABC123",
+        active: true
+      }
+    end
+
+    it 'creates a new coupon when request is valid' do
+      expect {
+        post "/api/v1/merchants/#{@merchant.id}/coupons", params: { coupon: @valid_attributes }
+      }.to change(Coupon, :count).by(1)
+
+      expect(response).to have_http_status(:created)
+      json_response = JSON.parse(response.body)
+
+      expect(json_response).to have_key("data")
+      expect(json_response["data"]).to have_key("attributes")
+      expect(json_response["data"]["attributes"]["name"]).to eq("Sample Coupon")
     end
   end
 end
