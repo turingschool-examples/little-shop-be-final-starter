@@ -15,7 +15,11 @@ class Api::V1::Merchants::CouponsController < ApplicationController
     @coupon = Coupon.new(coupon_params)
     @coupon.merchant_id = params[:merchant_id]
 
-    if @coupon.save
+    if @coupon.exceeds_active_coupon_limit?
+      render json: { error: 'This merchant already has 5 active coupons'}, status: :forbidden
+    elsif @coupon.code_already_exists?
+      render json: { error: "This coupon code already exists"}, status: :unprocessable_entity
+    elsif @coupon.save
       render json: CouponSerializer.new(@coupon), status: :created
     else
       render json: @coupon.errors, status: :unprocessable_entity

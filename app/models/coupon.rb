@@ -16,4 +16,12 @@ class Coupon < ApplicationRecord
       false
     end
   end
+
+  def exceeds_active_coupon_limit?
+    merchant.coupons.where(active: true).count >= 5
+  end
+
+  def code_already_exists?
+    Coupon.exists?(code: code)
+  end
 end

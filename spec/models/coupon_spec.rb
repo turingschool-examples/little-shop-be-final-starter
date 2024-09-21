@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe Coupon, type: :model do
-  describe '.for_merchant' do
+  describe '#for_merchant' do
     let(:merchant_1) { FactoryBot.create(:merchant) }
     let(:merchant_2) { FactoryBot.create(:merchant) }
 
@@ -33,4 +33,31 @@ RSpec.describe Coupon, type: :model do
       expect(inactive_coupon.reload.active).to be false
     end
   end
+
+  describe '#exceeds_active_coupon_limit?' do
+    let(:merchant) { FactoryBot.create(:merchant) }
+    let!(:active_coupons) { FactoryBot.create_list(:coupon, 3, merchant: merchant, active: true) }  
+    
+    it 'returns true when merchant has 5 active coupon' do
+      coupon_1 = FactoryBot.create(:coupon, merchant: merchant, active: true)
+      expect(coupon_1.exceeds_active_coupon_limit?).to be false
+      coupon_2 = FactoryBot.create(:coupon, merchant: merchant, active: true)
+      expect(coupon_2.exceeds_active_coupon_limit?).to be true
+    end
+  end
+
+  describe '#code_already_exists?' do
+    let(:merchant) { FactoryBot.create(:merchant) }  
+    let!(:existing_coupon) { FactoryBot.create(:coupon, code: 'UNIQUECODE', merchant: merchant) }
+
+    it 'returns true when coupon code already exists' do
+      expect(existing_coupon.code_already_exists?).to be true
+    end
+
+    it 'returns false when coupon code doesnt exist' do
+      new_coupon = Coupon.new(code: 'NEWCODE', merchant: merchant)
+      expect(new_coupon.code_already_exists?).to be false
+    end
+  end
+
 end
