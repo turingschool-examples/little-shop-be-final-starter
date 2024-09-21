@@ -22,7 +22,6 @@ RSpec.describe "Coupons", type: :request do
         expect(coupon['attributes']['name']).to eq(coupons[index].name)
         expect(coupon['attributes']['code']).to eq(coupons[index].code)
         expect(coupon['attributes']['active']).to eq(coupons[index].active)
-
       end
     end
   end
