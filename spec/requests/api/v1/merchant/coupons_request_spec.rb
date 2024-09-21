@@ -28,7 +28,7 @@ RSpec.describe "Coupons", type: :request do
 
   describe "GET /api/v1/merchants/:merchant_id/coupons/:id" do
     let(:merchant) { FactoryBot.create(:merchant) }
-    let(:coupon) { FactoryBot.create(:coupon,merchant: merchant) }
+    let(:coupon) { FactoryBot.create(:coupon, merchant: merchant) }
 
     it 'returns a specific coupons details' do
       get "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}"
@@ -80,6 +80,26 @@ RSpec.describe "Coupons", type: :request do
       expect(response).to have_http_status(:unprocessable_entity)
       json_response = JSON.parse(response.body)
       expect(json_response).to have_key("name")
+    end
+  end
+
+  describe "PATCH /api/v1/merchants/:merchant_id/coupons:id/deactivate" do
+    let(:merchant) { FactoryBot.create(:merchant) }
+    let(:coupon) { FactoryBot.create(:coupon, merchant: merchant, active: true) }
+
+    it 'deactivates the chosen active coupon' do
+      expect(coupon.active).to be true
+
+      patch "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}/deactivate"
+
+      expect(response).to be_successful
+      json_response = JSON.parse(response.body)
+
+      expect(json_response['data']['id']).to eq(coupon.id.to_s)
+      expect(json_response['data']['attributes']['active']).to eq(false)
+    
+      coupon.reload
+      expect(coupon.active).to be false
     end
   end
 end

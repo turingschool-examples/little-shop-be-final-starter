@@ -1,5 +1,5 @@
 class Api::V1::Merchants::CouponsController < ApplicationController
-  before_action :set_coupon, only: [:show, :activate, :deactivate]
+  before_action :set_coupon, only: [:activate, :deactivate]
   
   def index
     @coupons = Coupon.for_merchant(params[:merchant_id])
@@ -23,8 +23,8 @@ class Api::V1::Merchants::CouponsController < ApplicationController
   end
 
   def deactivate
-    @coupon = Coupon.update(active: false)
-    render json: CouponSerializer.new(@coupons)
+    @coupon.update(active: false)
+    render json: CouponSerializer.new(@coupon)
   end
 
   def activate
