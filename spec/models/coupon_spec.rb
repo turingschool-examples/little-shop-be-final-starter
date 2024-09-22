@@ -1,48 +1,52 @@
 require "rails_helper"
 
 RSpec.describe Coupon, type: :model do
-  describe '#for_merchant' do
-    let(:merchant_1) { FactoryBot.create(:merchant) }
-    let(:merchant_2) { FactoryBot.create(:merchant) }
+  let!(:merchant) { Merchant.create(name: "Test Merchant") }
+  let!(:active_coupon) { Coupon.create(name: "Active Coupon", code: "ACTIVE123", active: true, merchant: merchant) }
+  let!(:inactive_coupon) { Coupon.create(name: "Inactive Coupon", code: "INACTIVE123", active: false, merchant: merchant) }
+  
+  describe '.for_merchant_with_status' do
+    it 'returns only active coupons for merchant when selecting active' do
+      coupons = Coupon.for_merchant_with_status(merchant.id, 'active')
+      expect(coupons).to include(active_coupon)
+      expect(coupons).not_to include(inactive_coupon)
+    end
 
-    let!(:merchant_1_coupons) { FactoryBot.create_list(:coupon, 3, merchant: merchant_1)}
-    let!(:merchant_2_coupons) { FactoryBot.create_list(:coupon, 4, merchant: merchant_2)}
+    it 'returns only inactive coupons for merchant when selecting inactive' do
+      coupons = Coupon.for_merchant_with_status(merchant.id, 'inactive')
+      expect(coupons).to include(inactive_coupon)
+      expect(coupons).not_to include(active_coupon)
+    end
 
-    it 'returns coupons for the specified merchant' do
-      result = Coupon.for_merchant(merchant_1.id)
+    it 'returns all coupons when status is not selected' do
+      coupons = Coupon.for_merchant_with_status(merchant.id)
+      expect(coupons).to include(active_coupon, inactive_coupon)
+    end
 
-      expect(result.count).to eq(3)
-      expect(result).to match_array(merchant_1_coupons)
-      expect(result).not_to include(*merchant_2_coupons)
+    it 'returns all coupons when status is not recognized' do
+      coupons = Coupon.for_merchant_with_status(merchant.id, 'unknown')
+      expect(coupons).to include(active_coupon, inactive_coupon)
     end
   end
 
   describe '#activate_coupon' do
-    let(:merchant) { FactoryBot.create(:merchant) }
-    let!(:active_coupons) { FactoryBot.create_list(:coupon, 4, merchant: merchant, active: true) }
-    let(:inactive_coupon) { FactoryBot.create(:coupon, merchant: merchant, active: false, name: "Inactive Coupon", code: "INACTIVE123") }
-
     it 'activates the coupon when there are less than 5 active coupons' do
-      expect(inactive_coupon.activate_coupon).to be_truthy
+      expect(inactive_coupon.activate_coupon).to be true
       expect(inactive_coupon.reload.active).to be true
     end
 
     it 'does not activate the coupon and returns false when there are 5 active coupons' do
-      FactoryBot.create(:coupon, merchant: merchant, active: true)
-      expect(inactive_coupon.activate_coupon).to be_falsey
+      5.times { Coupon.create(name: "Active", code: "ACTIVE", active: true, merchant: merchant) }
+      expect(inactive_coupon.activate_coupon).to be false
       expect(inactive_coupon.reload.active).to be false
     end
   end
 
-  describe '#exceeds_active_coupon_limit?' do
-    let(:merchant) { FactoryBot.create(:merchant) }
-    let!(:active_coupons) { FactoryBot.create_list(:coupon, 3, merchant: merchant, active: true) }  
-    
+  describe '#exceeds_active_coupon_limit?' do    
     it 'returns true when merchant has 5 active coupon' do
-      coupon_1 = FactoryBot.create(:coupon, merchant: merchant, active: true)
-      expect(coupon_1.exceeds_active_coupon_limit?).to be false
-      coupon_2 = FactoryBot.create(:coupon, merchant: merchant, active: true)
-      expect(coupon_2.exceeds_active_coupon_limit?).to be true
+      5.times { Coupon.create(name: "Active", code: "ACTIVE", active: true, merchant: merchant) }
+      coupon = Coupon.new(name: "New Coupon", code: "NEW123", active: false, merchant: merchant)
+      expect(coupon.exceeds_active_coupon_limit?).to be true
     end
   end
 
