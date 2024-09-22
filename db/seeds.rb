@@ -23,7 +23,9 @@ if merchants.any?
         name: Faker::Commerce.promotion_code,
         code: Faker::Alphanumeric.alphanumeric(number: 10).upcase,
         active: [true, false].sample,
-        merchant: merchant
+        merchant: merchant,
+        discount_type: ['dollar_off', 'percentage_off'].sample,
+        discount_value: Faker::Commerce.price(range: 1..100)
       )
     end
   end
