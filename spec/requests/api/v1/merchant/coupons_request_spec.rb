@@ -44,6 +44,50 @@ RSpec.describe "Coupons", type: :request do
     end
   end
 
+  describe 'GET /api/v1/merchanrs/:merchant_id/coupons?status=' do
+    let(:merchant) { FactoryBot.create(:merchant) }
+    let!(:active_coupons) { FactoryBot.create_list(:coupon, 3, merchant: merchant, active: true, discount_type: 'dollar_off', discount_value: 10) }
+    let!(:inactive_coupons) { FactoryBot.create_list(:coupon, 2, merchant: merchant, active: false, discount_type: 'percentage_off', discount_value: 20) }
+
+    it 'only returns active coupons when status is selected as active' do
+      get "/api/v1/merchants/#{merchant.id}/coupons", params: { status: 'active' }
+
+      expect(response).to be_successful
+      json_response = JSON.parse(response.body)
+
+      expect(json_response['data'].count).to eq(3)
+      json_response['data'].each do |coupon|
+        expect(coupon['attributes']['active']).to be true
+        expect(coupon['attributes']['discount_type']).to eq('dollar_off')
+        expect(coupon['attributes']['discount_value'].to_f).to eq(10.0)
+      end
+    end
+
+    it 'only returns inactive coupons when status is selected as inactive' do
+      get "/api/v1/merchants/#{merchant.id}/coupons", params: { status: 'inactive' }
+
+      expect(response).to be_successful
+      json_response = JSON.parse(response.body)
+
+      json_response['data'].each do |coupon|
+        expect(coupon['attributes']['active']).to be false
+        expect(coupon['attributes']['discount_type']).to eq('percentage_off')
+        expect(coupon['attributes']['discount_value'].to_f).to eq(20.0)
+      end
+    end
+
+    it 'returns all coupons when no status is selected' do
+      get "/api/v1/merchants/#{merchant.id}/coupons", params: {}
+
+      expect(response).to be_successful
+      json_response = JSON.parse(response.body)
+
+      expect(json_response['data'].count).to eq(5)
+      end
+    end
+
+  end
+
   describe "POST /api/v1/merchants/:merchant_id/coupons" do
     before do
       @merchant = FactoryBot.create(:merchant)
