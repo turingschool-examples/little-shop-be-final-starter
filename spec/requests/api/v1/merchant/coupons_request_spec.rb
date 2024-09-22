@@ -44,7 +44,7 @@ RSpec.describe "Coupons", type: :request do
     end
   end
 
-  describe 'GET /api/v1/merchanrs/:merchant_id/coupons?status=' do
+  describe 'GET /api/v1/merchants/:merchant_id/coupons?status=' do
     let(:merchant) { FactoryBot.create(:merchant) }
     let!(:active_coupons) { FactoryBot.create_list(:coupon, 3, merchant: merchant, active: true, discount_type: 'dollar_off', discount_value: 10) }
     let!(:inactive_coupons) { FactoryBot.create_list(:coupon, 2, merchant: merchant, active: false, discount_type: 'percentage_off', discount_value: 20) }
@@ -83,9 +83,7 @@ RSpec.describe "Coupons", type: :request do
       json_response = JSON.parse(response.body)
 
       expect(json_response['data'].count).to eq(5)
-      end
     end
-
   end
 
   describe "POST /api/v1/merchants/:merchant_id/coupons" do
@@ -96,20 +94,38 @@ RSpec.describe "Coupons", type: :request do
         code: "ABC123",
         active: true,
         discount_type: 'dollar_off',
-        discount_value: 10
+        discount_value: 10,
       }
 
       @invalid_attributes = {
         name: nil,
         code: "ABC123",
-        active: true
+        active: true,
       }
     end
 
+    it 'returns an error when trying to create more than 5 active coupons' do
+      FactoryBot.create_list(:coupon, 5, merchant: @merchant, active: true, discount_type: 'dollar_off', discount_value: 10)
+      
+      post "/api/v1/merchants/#{@merchant.id}/coupons", params: { coupon: @valid_attributes }
+  
+      expect(response).to have_http_status(:forbidden)
+      json_response = JSON.parse(response.body)
+      expect(json_response['error']).to eq('This merchant already has 5 active coupons')
+    end
+  
+    it 'returns an error when the coupon code already exists' do
+      FactoryBot.create(:coupon, merchant: @merchant, code: @valid_attributes[:code], active: true, discount_type: 'dollar_off', discount_value: 10)
+      
+      post "/api/v1/merchants/#{@merchant.id}/coupons", params: { coupon: @valid_attributes }
+  
+      expect(response).to have_http_status(:unprocessable_entity)
+      json_response = JSON.parse(response.body)
+      expect(json_response['error']).to eq("This coupon code already exists")
+    end
+
     it 'creates a new coupon when request is valid' do
-      expect {
-        post "/api/v1/merchants/#{@merchant.id}/coupons", params: { coupon: @valid_attributes }
-      }.to change(Coupon, :count).by(1)
+      expect { post "/api/v1/merchants/#{@merchant.id}/coupons", params: { coupon: @valid_attributes } }.to change(Coupon, :count).by(1)
 
       expect(response).to have_http_status(:created)
       json_response = JSON.parse(response.body)
@@ -119,10 +135,8 @@ RSpec.describe "Coupons", type: :request do
       expect(json_response["data"]["attributes"]["name"]).to eq("Sample Coupon")
     end
 
-    it 'does not create a coupon when request in valid' do
-      expect {
-        post "/api/v1/merchants/#{@merchant.id}/coupons", params: { coupon: @invalid_attributes }
-      }.to change(Coupon, :count).by(0)
+    it 'does not create a coupon when request is invalid' do
+      expect { post "/api/v1/merchants/#{@merchant.id}/coupons", params: { coupon: @invalid_attributes } }.to change(Coupon, :count).by(0)
       expect(response).to have_http_status(:unprocessable_entity)
       json_response = JSON.parse(response.body)
       expect(json_response).to have_key("name")
