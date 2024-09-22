@@ -3,5 +3,5 @@ class CouponSerializer
   
   set_type :coupon
   
-  attributes :name, :code, :active, discount_type, :discount_value
+  attributes :name, :code, :active, :discount_type, :discount_value
 end

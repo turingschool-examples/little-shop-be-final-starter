@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe "Coupons", type: :request do
   describe "GET /api/v1/merchants/:merchant_id/coupons" do
     let(:merchant) { FactoryBot.create(:merchant) }
-    let!(:coupons) { FactoryBot.create_list(:coupon, 5, merchant: merchant) }
+    let!(:coupons) { FactoryBot.create_list(:coupon, 5, merchant: merchant, discount_type: 'dollar_off', discount_value: 10) }
     
     it 'creates coupons for the merchant' do
       expect(Coupon.count).to eq(5)
@@ -28,7 +28,7 @@ RSpec.describe "Coupons", type: :request do
 
   describe "GET /api/v1/merchants/:merchant_id/coupons/:id" do
     let(:merchant) { FactoryBot.create(:merchant) }
-    let(:coupon) { FactoryBot.create(:coupon, merchant: merchant) }
+    let(:coupon) { FactoryBot.create(:coupon, merchant: merchant, discount_type: 'dollar_off', discount_value: 10) }
 
     it 'returns a specific coupons details' do
       get "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}"
@@ -50,7 +50,9 @@ RSpec.describe "Coupons", type: :request do
       @valid_attributes = {
         name: "Sample Coupon",
         code: "ABC123",
-        active: true
+        active: true,
+        discount_type: 'dollar_off',
+        discount_value: 10
       }
 
       @invalid_attributes = {
@@ -85,7 +87,8 @@ RSpec.describe "Coupons", type: :request do
 
   describe "PATCH /api/v1/merchants/:merchant_id/coupons:id/deactivate" do
     let(:merchant) { FactoryBot.create(:merchant) }
-    let(:coupon) { FactoryBot.create(:coupon, merchant: merchant, active: true) }
+    let(:coupon) { FactoryBot.create(:coupon, merchant: merchant, active: true, discount_type: 'dollar_off', discount_value: 10) }
+
 
     it 'deactivates the chosen active coupon' do
       expect(coupon.active).to be true
@@ -105,8 +108,8 @@ RSpec.describe "Coupons", type: :request do
 
   describe "PATCH /api/v1/merchants/:merchant_id/coupons:id/activate" do
     let(:merchant) { FactoryBot.create(:merchant) }
-    let!(:active_coupons) { FactoryBot.create_list(:coupon, 4, merchant: merchant, active: true) } 
-    let(:inactive_coupon) { FactoryBot.create(:coupon, merchant: merchant, active: false) }
+    let!(:active_coupons) { FactoryBot.create_list(:coupon, 4, merchant: merchant, active: true, discount_type: 'dollar_off', discount_value: 10) } 
+    let(:inactive_coupon) { FactoryBot.create(:coupon, merchant: merchant, active: false, discount_type: 'dollar_off', discount_value: 10) }
 
     it 'activates the coupon successfully when there are fewer than 5 active coupons' do
       patch "/api/v1/merchants/#{merchant.id}/coupons/#{inactive_coupon.id}/activate"
@@ -123,7 +126,7 @@ RSpec.describe "Coupons", type: :request do
 
     context 'when there are 5 active coupons' do
       before do
-        FactoryBot.create(:coupon, merchant: merchant, active: true)
+        FactoryBot.create(:coupon, merchant: merchant, active: true, discount_type: 'dollar_off', discount_value: 10)
       end
   
       it 'does not activate the coupon and returns an error' do
