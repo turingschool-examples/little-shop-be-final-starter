@@ -15,6 +15,18 @@ RSpec.describe "Merchant invoices endpoints" do
     @invoice2 = Invoice.create!(customer: @customer1, merchant: @merchant2, status: "shipped")
   end
 
+  it "should return all invoices for a given merchant when no status param is provided" do
+    get "/api/v1/merchants/#{@merchant1.id}/invoices"
+
+    json = JSON.parse(response.body, symbolize_names: true)
+
+    expect(response).to be_successful
+    expect(json[:data].count).to eq(4) 
+    json[:data].each do |invoice_data|
+      expect(invoice_data[:attributes][:merchant_id]).to eq(@merchant1.id)
+    end
+  end
+
   it "should return all invoices for a given merchant based on status param" do
     get "/api/v1/merchants/#{@merchant1.id}/invoices?status=packaged"
 
