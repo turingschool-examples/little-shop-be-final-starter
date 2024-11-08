@@ -24,9 +24,15 @@ Rails.application.routes.draw do
         resources :items, only: :index, controller: "merchants/items"
         resources :customers, only: :index, controller: "merchants/customers"
         resources :invoices, only: :index, controller: "merchants/invoices"
-        resources :coupons, only: [:show, :new], controller: "merchants/coupons"
+        #resources :coupons, controller: "merchants/coupons"
       end
       
     end
   end
+
+post "/api/v1/coupons", to: "api/v1/merchants/coupons#create"
+get "/api/v1/coupons/:id", to: "api/v1/merchants/coupons#show"
+ get "/api/v1/merchants/:merchant_id/coupons", to: "api/v1/merchants/coupons#index"
+
+
 end

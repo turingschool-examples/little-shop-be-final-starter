@@ -202,4 +202,18 @@ describe "Merchant endpoints", :type => :request do
     end
 
   end
+  it "can create a coupon" do
+    @merchant1 = Merchant.create!(name: "Turing")
+    coupon_params = ({
+      code: "Another Test",
+      discount: 5,
+      active: true,
+      percent_discount: true,
+      merchant_id: @merchant1.id
+    })
+    post api_v1_coupons_path, params: coupon_params, as: :json
+
+    expect(response).to be_successful
+
+  end
 end
