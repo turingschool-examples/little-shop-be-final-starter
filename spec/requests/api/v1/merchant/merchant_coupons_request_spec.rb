@@ -31,22 +31,24 @@ RSpec.describe 'Merchant Coupons API', type: :request do
     end
 
     context 'when the coupon does not exist' do
-      it 'returns a 404 error' do
+      it 'returns a 404 error with the correct error message' do
         get "/api/v1/merchants/#{@merchant.id}/coupons/999"
 
         expect(response).to have_http_status(:not_found)
         json_response = JSON.parse(response.body, symbolize_names: true)
-        expect(json_response[:error]).to eq('This resource does not exist')
+
+        expect(json_response[:errors]).to include('Coupon not found')
       end
     end
 
     context 'when the merchant does not exist' do
-      it 'returns a 404 error' do
+      it 'returns a 404 error with the correct record_not_found' do
         get "/api/v1/merchants/999/coupons/#{@coupon1.id}"
 
         expect(response).to have_http_status(:not_found)
         json_response = JSON.parse(response.body, symbolize_names: true)
-        expect(json_response[:error]).to eq('This resource does not exist')
+
+        expect(json_response[:errors]).to include('Merchant not found')
       end
     end
   end
