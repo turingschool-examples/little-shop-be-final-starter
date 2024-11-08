@@ -7,4 +7,8 @@ class CouponSerializer
   attribute :merchant_name do |coupon|
     coupon.merchant.name
   end
+
+  attribute :usage_count do |coupon|
+    coupon.usage_count
+  end
 end
