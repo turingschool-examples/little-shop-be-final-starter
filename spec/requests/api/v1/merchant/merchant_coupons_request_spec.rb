@@ -15,15 +15,16 @@ RSpec.describe 'Merchant Coupons', type: :request do
 
   describe 'GET /api/v1/coupons/:id' do
     it 'returns the coupon details along with usage count' do
-      get "/api/v1/coupons/#{@coupon1.id}"
+      get "/api/v1/coupons/#{@coupon.id}"
 
       expect(response).to have_http_status(:success)
       json_response = JSON.parse(response.body, symbolize_names: true)
 
-      expect(json_response[:data][:id]).to eq(@coupon1.id.to_s)
-      expect(json_response[:data][:attributes][:name]).to eq(@coupon1.name)
-      expect(json_response[:data][:attributes][:code]).to eq(@coupon1.code)
+      expect(json_response[:data][:id]).to eq(@coupon.id.to_s)
+      expect(json_response[:data][:type]).to eq('coupon')
+      expect(json_response[:data][:attributes][:name]).to eq(@coupon.name)
       expect(json_response[:data][:attributes][:usage_count]).to eq(2)
+      expect(json_response[:data][:attributes][:merchant_name]).to eq(@merchant.name)
     end
 
     it 'returns a 404 error if the coupon does not exist' do
