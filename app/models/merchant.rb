@@ -36,6 +36,10 @@ class Merchant < ApplicationRecord
     invoices.where(status: status)
   end
 
+  def coupons_filtered_by_active(active)
+    coupons.where(active: active)
+  end
+
   def self.find_all_by_name(name)
     Merchant.where("name iLIKE ?", "%#{name}%")
   end
