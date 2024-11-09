@@ -2,7 +2,8 @@ require 'rails_helper'
 
 RSpec.describe Coupon, type: :model do
   let(:merchant) { create(:merchant) }
-  let(:coupon) { create(:coupon, merchant: merchant) }
+  let!(:active_coupon) { create(:coupon, :active, merchant: merchant) }
+  let!(:inactive_coupon) { create(:coupon, :inactive, merchant: merchant) }
 
   describe 'validations' do
     it { should validate_presence_of(:name) }
@@ -17,5 +18,17 @@ RSpec.describe Coupon, type: :model do
   describe 'associations' do 
     it { should belong_to(:merchant) }
     it { should have_many(:invoices) }
-  end  
+  end 
+  
+  describe 'scopes' do
+    it 'can return an active coupon' do
+      expect(Coupon.active).to include(active_coupon)
+      expect(Coupon.active).not_to include(inactive_coupon)
+    end
+
+    it 'can return an inactive coupon' do
+      expect(Coupon.inactive).to include(inactive_coupon)
+      expect(Coupon.inactive).not_to include(active_coupon)
+    end
+  end
 end
