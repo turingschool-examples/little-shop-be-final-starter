@@ -9,7 +9,9 @@ class ErrorSerializer
   def self.format_invalid_search_response
     { 
       message: "your query could not be completed", 
-      errors: ["invalid search params"] 
+      errors: [
+        "invalid search params",
+      ] 
     }
   end
 end

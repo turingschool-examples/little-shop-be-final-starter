@@ -12,3 +12,6 @@ puts "Loading PostgreSQL Data dump into local database with command:"
 puts cmd
 system(cmd)
 
+
+# FactoryBot.create(:coupon, name:"BOGO", merchant:112)
+# FactoryBot.create_list(:coupon, 2, active:false, name:"BOGO", merchant_id: 112)
