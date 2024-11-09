@@ -18,6 +18,7 @@ describe Item, type: :model do
       expensive = create(:item, unit_price: 1000)
 
       expect(Item.sort_by_price).to eq([cheap, middle, expensive])
+      expect(Item.sort_by_price.to_sql).to include('ORDER BY "items"."unit_price" ASC')
     end
   end
 
@@ -50,6 +51,8 @@ describe Item, type: :model do
 
       expect(Item.find_items_by_price(max_price: 5)).to eq([item1, item2])
       expect(Item.find_items_by_price(min_price: 0, max_price: 25)).to eq([item3, item1, item2])
+      expect(Item.find_items_by_price(min_price: 0, max_price: 25).to_sql).to include('ORDER BY "items"."name" ASC')
+      expect(Item.find_items_by_price(min_price: 0, max_price: 25).to_sql).to include('WHERE (unit_price > 0.0 AND unit_price < 25.0)')
     end
   end
 end

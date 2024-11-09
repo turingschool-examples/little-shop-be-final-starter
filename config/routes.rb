@@ -24,6 +24,18 @@ Rails.application.routes.draw do
         resources :items, only: :index, controller: "merchants/items"
         resources :customers, only: :index, controller: "merchants/customers"
         resources :invoices, only: :index, controller: "merchants/invoices"
+
+        resources :coupons, only: [:index, :show, :create, :update] do
+          member do
+            patch :activate 
+            patch :deactivate 
+          end
+
+          collection do
+            get :active
+            get :inactive
+          end
+        end
       end
     end
   end

@@ -18,6 +18,7 @@ describe Merchant, type: :model do
       merchant3 = create(:merchant, created_at: 2.days.ago)
 
       expect(Merchant.sorted_by_creation).to eq([merchant1, merchant3, merchant2])
+      expect(Merchant.sorted_by_creation.to_sql).to include("ORDER BY created_at DESC")
     end
 
     it "should filter merchants by status of invoices" do
