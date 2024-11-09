@@ -31,4 +31,24 @@ RSpec.describe Coupon, type: :model do
       expect(Coupon.inactive).not_to include(active_coupon)
     end
   end
+
+  describe 'traits' do
+    it 'can be created active' do
+      expect(active_coupon.status).to be true
+    end
+
+    it 'can be created inactive' do
+      expect(inactive_coupon.status).to be false
+    end
+
+    it 'can have percent_off discount' do
+      percent_off = create(:coupon, :percent_off, merchant: merchant)
+      expect(percent_off.discount_type).to eq('percent_off')
+    end
+
+    it 'can have dollar_off discount' do
+      dollar_off = create(:coupon, :dollar_off, merchant: merchant)
+      expect(dollar_off.discount_type).to eq('dollar_off')
+    end
+  end
 end
