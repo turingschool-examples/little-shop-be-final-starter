@@ -5,6 +5,6 @@ FactoryBot.define do
     discount_value { Faker::Number.between(from: 5.0, to: 50.0).round(2)}
     discount_type { ["percent", "dollar"].sample}
     active { true }
-    merchant
+    association :merchant, factory: :merchant
   end
 end

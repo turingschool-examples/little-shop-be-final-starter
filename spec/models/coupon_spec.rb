@@ -31,19 +31,44 @@ RSpec.describe Coupon, type: :model do
   end
 
   describe '.find_by_merchant_and_id' do
-    it 'returns the coupon for the specified merchant' do
-      result = Coupon.find_by_merchant_and_id(@merchant1.id, @coupon1.id)
-      expect(result).to eq(@coupon1)
+    context 'when the coupon exists for the specified merchant' do
+      it 'returns the coupon' do
+        result = Coupon.find_by_merchant_and_id(@merchant1.id, @coupon1.id)
+        expect(result).to eq(@coupon1)
+      end
     end
 
-    it 'returns nil if the coupon does not belong to the specified merchant' do
-      result = Coupon.find_by_merchant_and_id(@merchant1.id, @coupon3.id)
-      expect(result).to be_nil
+    context 'when the coupon does not belong to the specified merchant' do
+      it 'returns nil' do
+        result = Coupon.find_by_merchant_and_id(@merchant1.id, @coupon3.id)
+        expect(result).to be_nil
+      end
     end
 
-    it 'returns nil if the coupon does not exist' do
-      result = Coupon.find_by_merchant_and_id(@merchant1.id, 9999)
-      expect(result).to be_nil
+    context 'when the coupon does not exist' do
+      it 'returns nil' do
+        result = Coupon.find_by_merchant_and_id(@merchant1.id, 9999)
+        expect(result).to be_nil
+      end
+    end
+
+    context 'when merchant_id or coupon_id is nil' do
+      it 'returns nil if merchant_id is nil' do
+        result = Coupon.find_by_merchant_and_id(nil, @coupon1.id)
+        expect(result).to be_nil
+      end
+
+      it 'returns nil if coupon_id is nil' do
+        result = Coupon.find_by_merchant_and_id(@merchant1.id, nil)
+        expect(result).to be_nil
+      end
+    end
+
+    context 'when ids are not integers' do
+      it 'returns nil if ids are not integers' do
+        result = Coupon.find_by_merchant_and_id('abc', 'xyz')
+        expect(result).to be_nil
+      end
     end
   end
 
