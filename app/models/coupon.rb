@@ -12,6 +12,6 @@ class Coupon < ApplicationRecord
   end
 
   def self.find_by_merchant_and_id(merchant_id, coupon_id)
-    where(merchant_id: merchant_id).find_by(id: coupon_id)
+    find_by(merchant_id: merchant_id, id: coupon_id)
   end
 end
