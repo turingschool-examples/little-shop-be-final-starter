@@ -47,4 +47,29 @@ RSpec.describe 'Merchant Coupons API', type: :request do
       end
     end
   end
+
+  describe 'GET /api/v1/merchants/:merchant_id/coupons' do
+    context 'when the merchant exists' do
+      it 'returns all coupons for the merchant' do
+        get "/api/v1/merchants/#{@merchant.id}/coupons"
+        
+        expect(response).to have_http_status(:success)
+        json_response = JSON.parse(response.body, symbolize_names: true)
+
+        expect(json_response[:data].length).to eq(2)
+        expect(json_response[:data][0][:attributes][:merchant_id]).to eq(@merchant.id)
+        expect(json_response[:data][1][:attributes][:merchant_id]).to eq(@merchant.id)
+      end
+    end
+
+    context 'when the merchant does not exist' do
+      it 'returns a 404 error' do
+        get "/api/v1/merchants/9999/coupons"
+
+        expect(response).to have_http_status(:not_found)
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        expect(json_response[:errors]).to eq(["Your query could not be completed"])
+      end
+    end
+  end
 end
