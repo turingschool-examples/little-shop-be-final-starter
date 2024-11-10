@@ -8,9 +8,13 @@ class Api::V1::Merchants::CouponsController < ApplicationController
   end
 
   def show
-    merchant = Merchant.find(params[:merchant_id])
-    coupon = merchant.coupons.find(params[:id])
-    render json: CouponSerializer.new(coupon), status: :ok
+    coupon = Coupon.find_by_merchant_and_id(params[:merchant_id], params[:id])
+    
+    if coupon
+      render json: CouponSerializer.new(coupon), status: :ok
+    else
+      record_not_found
+    end
   end
 
   def create
