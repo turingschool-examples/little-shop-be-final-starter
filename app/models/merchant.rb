@@ -7,6 +7,10 @@ class Merchant < ApplicationRecord
   has_many :transactions, through: :invoices
   has_many :coupons
 
+  # def can_activate_coupon?
+  #   coupons.where(active: true).count < 5
+  # end
+
   def self.sorted_by_creation
     Merchant.order("created_at DESC")
   end

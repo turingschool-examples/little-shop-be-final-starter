@@ -82,4 +82,73 @@ RSpec.describe Coupon, type: :model do
       expect(new_coupon.usage_count).to eq(0)
     end
   end
+
+  context 'when the coupon code is not unique' do
+    it 'is not valid' do
+      FactoryBot.create(:coupon, merchant: @merchant1, code: 'SAVEMONEY')
+      duplicate_coupon = FactoryBot.build(:coupon, merchant: @merchant2, code: 'SAVEMONEY')
+
+      expect(duplicate_coupon.valid?).to be_falsey
+      expect(duplicate_coupon.errors[:code]).to include('has already been taken')
+    end
+  end
+
+  context 'when a merchant has 5 active coupons' do
+    before(:each) do
+      @merchant = FactoryBot.create(:merchant)
+      FactoryBot.create_list(:coupon, 5, merchant: @merchant, active: true)
+    end
+
+    it 'does not allow creating a 6th active coupon' do
+      new_coupon = FactoryBot.build(:coupon, merchant: @merchant, active: true)
+      expect(new_coupon.valid?).to be_falsey
+      expect(new_coupon.errors[:base]).to include('Merchant cannot have more than 5 active coupons')
+    end
+
+    it 'allows creating an inactive coupon' do
+      new_coupon = FactoryBot.build(:coupon, merchant: @merchant, active: false)
+      expect(new_coupon.valid?).to be_truthy
+    end
+
+    it 'does not allow activating a 6th coupon if there are already 5 active coupons' do
+      inactive_coupon = FactoryBot.create(:coupon, merchant: @merchant, active: false)
+      inactive_coupon.active = true
+      inactive_coupon.save
+      expect(inactive_coupon.errors[:base]).to include('Merchant cannot have more than 5 active coupons')
+    end
+  end
+
+  describe '#update_status' do
+    context 'when trying to deactivate a coupon with forbidden invoices' do
+      before do
+        FactoryBot.create(:invoice, status: 'shipped', coupon: @coupon1)
+      end
+
+      it 'does not allow deactivation' do
+        expect(@coupon1.update_status(false)).to be false
+        expect(@coupon1.errors[:base]).to include('Cannot deactivate coupon with invoices in shipped, packaged, or returned status')
+      end
+    end
+
+    it 'activates the coupon if it was previously inactive' do
+      expect(@coupon2.active).to be false
+      result = @coupon2.update_status(true)
+      expect(result).to be_truthy
+      expect(@coupon2.reload.active).to be true
+    end
+  end
+
+  describe '#invoices_with_forbidden_status?' do
+    it 'returns true if there are invoices with forbidden statuses' do
+      FactoryBot.create(:invoice, status: 'packaged', coupon: @coupon1)
+      expect(@coupon1.send(:invoices_with_forbidden_status?)).to be true
+    end
+  end
+
+  describe '#update_with_status' do
+    it 'updates the coupon attributes without changing active status' do
+      expect(@coupon1.update_with_status({ name: 'New Name' })).to be true
+      expect(@coupon1.reload.name).to eq('New Name')
+    end
+  end
 end
