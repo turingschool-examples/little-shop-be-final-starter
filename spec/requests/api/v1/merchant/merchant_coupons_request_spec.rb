@@ -52,10 +52,9 @@ RSpec.describe 'Merchant Coupons API', type: :request do
     context 'when the merchant exists' do
       it 'returns all coupons for the merchant' do
         get "/api/v1/merchants/#{@merchant.id}/coupons"
-        
+
         expect(response).to have_http_status(:success)
         json_response = JSON.parse(response.body, symbolize_names: true)
-
         expect(json_response[:data].length).to eq(2)
         expect(json_response[:data][0][:attributes][:merchant_id]).to eq(@merchant.id)
         expect(json_response[:data][1][:attributes][:merchant_id]).to eq(@merchant.id)
@@ -68,7 +67,7 @@ RSpec.describe 'Merchant Coupons API', type: :request do
 
         expect(response).to have_http_status(:not_found)
         json_response = JSON.parse(response.body, symbolize_names: true)
-        expect(json_response[:errors]).to eq(["Your query could not be completed"])
+        expect(json_response[:errors]).to eq(['Your query could not be completed'])
       end
     end
   end
@@ -101,9 +100,8 @@ RSpec.describe 'Merchant Coupons API', type: :request do
       it 'returns a 422 error with validation messages' do
         invalid_params = { coupon: { name: '', code: '', discount_value: nil, discount_type: '' } }
         post "/api/v1/merchants/#{@merchant.id}/coupons", params: invalid_params
-    
+
         expect(response).to have_http_status(:unprocessable_entity)
-        
         json_response = JSON.parse(response.body, symbolize_names: true)
         expect(json_response[:errors]).to include(
           "Name can't be blank",
@@ -111,6 +109,43 @@ RSpec.describe 'Merchant Coupons API', type: :request do
           "Discount value can't be blank",
           "Discount type is not included in the list"
         )
+      end
+    end
+  end
+
+  describe 'PATCH /api/v1/merchants/:merchant_id/coupons/:id' do
+    before(:each) do
+      @coupon = create(:coupon, merchant: @merchant, discount_type: 'percent', discount_value: 20, active: true)
+    end
+
+    context 'when updating the active status' do
+      it 'deactivates the coupon successfully' do
+        patch "/api/v1/merchants/#{@merchant.id}/coupons/#{@coupon.id}", params: { coupon: { active: false } }
+
+        expect(response).to have_http_status(:ok)
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        expect(json_response[:data][:attributes][:active]).to be false
+        expect(@coupon.reload.active).to be false
+      end
+
+      it 'activates the coupon successfully' do
+        inactive_coupon = create(:coupon, merchant: @merchant, discount_type: 'percent', discount_value: 15, active: false)
+        patch "/api/v1/merchants/#{@merchant.id}/coupons/#{inactive_coupon.id}", params: { coupon: { active: true } }
+
+        expect(response).to have_http_status(:ok)
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        expect(json_response[:data][:attributes][:active]).to be true
+        expect(inactive_coupon.reload.active).to be true
+      end
+    end
+
+    context 'when the coupon does not exist' do
+      it 'returns a 404 error' do
+        patch "/api/v1/merchants/#{@merchant.id}/coupons/9999", params: { coupon: { active: false } }
+
+        expect(response).to have_http_status(:not_found)
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        expect(json_response[:errors]).to eq(['Your query could not be completed'])
       end
     end
   end
