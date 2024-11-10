@@ -33,4 +33,22 @@ RSpec.describe 'Merchant Coupons endpoints' do
       expect(json[:attributes][:status]).to eq(coupon.status)
     end
   end
+
+  describe 'should create a coupon' do
+    it 'can create a coupon with correct parameters' do
+      coupon_params = {
+        name: 'Twenty Four Percent',
+        code: 'TWENTY24',
+        discount_type: 'percent_off',
+        discount_value: 24.0,
+        status: true,
+      }
+
+      post api_v1_merchant_coupons_path(merchant_id: merchant.id), params: { coupon: coupon_params}
+      expect(response).to have_http_status(:created)
+      json = JSON.parse(response.body, symbolize_names: true)[:data]
+      expect(json[:attributes][:name]).to eq('Twenty Four Percent')
+      expect(json[:attributes][:code]).to eq('TWENTY24')
+    end
+  end
 end
