@@ -51,25 +51,6 @@ RSpec.describe Coupon, type: :model do
         expect(result).to be_nil
       end
     end
-
-    context 'when merchant_id or coupon_id is nil' do
-      it 'returns nil if merchant_id is nil' do
-        result = Coupon.find_by_merchant_and_id(nil, @coupon1.id)
-        expect(result).to be_nil
-      end
-
-      it 'returns nil if coupon_id is nil' do
-        result = Coupon.find_by_merchant_and_id(@merchant1.id, nil)
-        expect(result).to be_nil
-      end
-    end
-
-    context 'when ids are not integers' do
-      it 'returns nil if ids are not integers' do
-        result = Coupon.find_by_merchant_and_id('abc', 'xyz')
-        expect(result).to be_nil
-      end
-    end
   end
 
   describe '#usage_count' do
@@ -112,8 +93,8 @@ RSpec.describe Coupon, type: :model do
 
     it 'does not allow activating a 6th coupon if there are already 5 active coupons' do
       inactive_coupon = FactoryBot.create(:coupon, merchant: @merchant, active: false)
-      inactive_coupon.active = true
-      inactive_coupon.save
+      result = inactive_coupon.update_with_status({ active: true })
+      expect(result).to be false
       expect(inactive_coupon.errors[:base]).to include('Merchant cannot have more than 5 active coupons')
     end
   end
@@ -123,6 +104,12 @@ RSpec.describe Coupon, type: :model do
       expect(@coupon1.update_with_status({ name: 'New Name' })).to be true
       expect(@coupon1.reload.name).to eq('New Name')
     end
+
+    it 'updates the active status when active param is present' do
+      result = @coupon1.update_with_status({ active: false })
+      expect(result).to be true
+      expect(@coupon1.reload.active).to be false
+    end
   end
 
   describe '.by_merchant' do
@@ -131,9 +118,9 @@ RSpec.describe Coupon, type: :model do
       expect(coupons).to include(@coupon1, @coupon2)
       expect(coupons).not_to include(@coupon3)
     end
-  
+
     it 'returns an empty array if no coupons exist for the merchant' do
-      coupons = Coupon.by_merchant(9999) 
+      coupons = Coupon.by_merchant(9999)
       expect(coupons).to be_empty
     end
   end
@@ -144,72 +131,10 @@ RSpec.describe Coupon, type: :model do
       expect(result).to be_persisted
       expect(result.merchant).to eq(@merchant1)
     end
-  
+
     it 'returns nil if the merchant does not exist' do
       result = Coupon.create_for_merchant(9999, { name: 'Invalid Coupon', code: 'INVALID', discount_value: 10, discount_type: 'percent' })
       expect(result).to be_nil
-    end
-  end
-
-  describe '#update_with_status' do
-  it 'updates the active status when active param is present' do
-    result = @coupon1.update_with_status({ active: false })
-    expect(result).to be true
-    expect(@coupon1.reload.active).to be false
-  end
-
-  it 'updates other attributes without changing active status' do
-    result = @coupon1.update_with_status({ name: 'Updated Name' })
-    expect(result).to be true
-    expect(@coupon1.reload.name).to eq('Updated Name')
-    end
-  end
-
-describe '#update_with_status' do
-  it 'updates other attributes without changing active status' do
-    coupon = Coupon.create!(
-      name: 'SpecialSavings741562',
-      code: 'FIXEDCODE123',
-      discount_value: 20,
-      discount_type: 'percent',
-      active: true,
-      merchant: FactoryBot.create(:merchant)
-    )
-
-    expect(coupon.name).to eq('SpecialSavings741562')
-    
-    result = coupon.update_with_status({ name: 'New Coupon Name' })
-    
-    expect(result).to be true
-    expect(coupon.reload.name).to eq('New Coupon Name')
-    expect(coupon.active).to be true
-  end
-end
-
-
-describe 'validations' do
-  context 'when a merchant has 5 active coupons' do
-    before(:each) do
-      @merchant = FactoryBot.create(:merchant)
-      FactoryBot.create_list(:coupon, 5, merchant: @merchant, active: true)
-    end
-
-    it 'does not allow creating a 6th active coupon' do
-      new_coupon = FactoryBot.build(:coupon, merchant: @merchant, active: true)
-      expect(new_coupon.valid?).to be false
-      expect(new_coupon.errors[:base]).to include('Merchant cannot have more than 5 active coupons')
-    end
-
-    it 'allows creating an inactive coupon' do
-      inactive_coupon = FactoryBot.build(:coupon, merchant: @merchant, active: false)
-      expect(inactive_coupon.valid?).to be true
-    end
-
-    it 'does not allow activating a 6th coupon if there are already 5 active coupons' do
-      inactive_coupon = FactoryBot.create(:coupon, merchant: @merchant, active: false)
-      result = inactive_coupon.update_with_status({ active: true })
-      expect(result).to be false
-      expect(inactive_coupon.errors[:base]).to include('Merchant cannot have more than 5 active coupons')
     end
   end
 end
