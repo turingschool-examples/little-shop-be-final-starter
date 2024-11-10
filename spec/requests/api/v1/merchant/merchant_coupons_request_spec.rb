@@ -72,4 +72,46 @@ RSpec.describe 'Merchant Coupons API', type: :request do
       end
     end
   end
+
+  describe 'POST /api/v1/merchants/:merchant_id/coupons' do
+    context 'when the request is valid' do
+      it 'creates a new coupon' do
+        coupon_params = {
+          coupon: {
+            name: 'Holiday Discount',
+            code: 'HOLIDAY2024',
+            discount_value: 25,
+            discount_type: 'percent',
+            active: true
+          }
+        }
+        post "/api/v1/merchants/#{@merchant.id}/coupons", params: coupon_params
+
+        expect(response).to have_http_status(:created)
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        expect(json_response[:data][:attributes][:name]).to eq('Holiday Discount')
+        expect(json_response[:data][:attributes][:code]).to eq('HOLIDAY2024')
+        expect(json_response[:data][:attributes][:discount_value]).to eq(25)
+        expect(json_response[:data][:attributes][:discount_type]).to eq('percent')
+        expect(json_response[:data][:attributes][:active]).to be true
+      end
+    end
+
+    context 'when the request is invalid' do
+      it 'returns a 422 error with validation messages' do
+        invalid_params = { coupon: { name: '', code: '', discount_value: nil, discount_type: '' } }
+        post "/api/v1/merchants/#{@merchant.id}/coupons", params: invalid_params
+    
+        expect(response).to have_http_status(:unprocessable_entity)
+        
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        expect(json_response[:errors]).to include(
+          "Name can't be blank",
+          "Code can't be blank",
+          "Discount value can't be blank",
+          "Discount type is not included in the list"
+        )
+      end
+    end
+  end
 end
