@@ -1,5 +1,5 @@
 class Coupon < ApplicationRecord
-  belongs_to :merchant
+  belongs_to :merchant, required: true
   has_many :invoices
 
   validates :name, presence: true
@@ -7,11 +7,23 @@ class Coupon < ApplicationRecord
   validates :discount_value, presence: true
   validates :discount_type, inclusion: { in: ["percent", "dollar"]}
 
+  validate :merchant_cannot_exceed_five_active_coupons, if: :active?
+
   def usage_count
     invoices.count
   end
 
   def self.find_by_merchant_and_id(merchant_id, coupon_id)
     find_by(merchant_id: merchant_id, id: coupon_id)
+  end
+
+  private
+
+  def merchant_cannot_exceed_five_active_coupons
+    return unless merchant.present?
+
+    if merchant.coupons.where(active: true).count >= 5
+      errors.add(:base, 'Merchant cannot have more than 5 active coupons')
+    end
   end
 end

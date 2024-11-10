@@ -4,7 +4,7 @@ FactoryBot.define do
     code { Faker::Alphanumeric.unique.alphanumeric(number: 10).upcase }
     discount_value { Faker::Number.between(from: 5.0, to: 50.0).round(2)}
     discount_type { ["percent", "dollar"].sample}
-    active { true }
-    association :merchant, factory: :merchant
+    active { false }
+    association :merchant
   end
 end
