@@ -57,12 +57,12 @@ RSpec.describe Coupon, type: :model do
         result = Coupon.find_by_merchant_and_id(nil, @coupon1.id)
         expect(result).to be_nil
       end
+    end
 
       it 'returns nil if coupon_id is nil' do
         result = Coupon.find_by_merchant_and_id(@merchant1.id, nil)
         expect(result).to be_nil
       end
-    end
 
     context 'when ids are not integers' do
       it 'returns nil if ids are not integers' do
@@ -70,16 +70,27 @@ RSpec.describe Coupon, type: :model do
         expect(result).to be_nil
       end
     end
-  end
 
   describe '#usage_count' do
     it 'returns the correct count of associated invoices' do
       expect(@coupon1.usage_count).to eq(2)
     end
+  end
 
     it 'returns 0 when there are no associated invoices' do
       new_coupon = FactoryBot.create(:coupon, merchant: @merchant1)
       expect(new_coupon.usage_count).to eq(0)
+    end
+  end
+
+  context 'when the coupon code is not unique' do
+    it 'is not valid' do
+      FactoryBot.create(:coupon, merchant: @merchant1, code: 'SAVEMONEY')
+
+      duplicate_coupon = FactoryBot.build(:coupon, merchant: @merchant2, code: 'SAVEMONEY')
+
+      expect(duplicate_coupon.valid?).to be_falsey
+      expect(duplicate_coupon.errors[:code]).to include('has already been taken')
     end
   end
 end
