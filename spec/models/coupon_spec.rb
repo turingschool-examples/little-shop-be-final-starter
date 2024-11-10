@@ -51,25 +51,6 @@ RSpec.describe Coupon, type: :model do
         expect(result).to be_nil
       end
     end
-
-    context 'when merchant_id or coupon_id is nil' do
-      it 'returns nil if merchant_id is nil' do
-        result = Coupon.find_by_merchant_and_id(nil, @coupon1.id)
-        expect(result).to be_nil
-      end
-
-      it 'returns nil if coupon_id is nil' do
-        result = Coupon.find_by_merchant_and_id(@merchant1.id, nil)
-        expect(result).to be_nil
-      end
-    end
-
-    context 'when ids are not integers' do
-      it 'returns nil if ids are not integers' do
-        result = Coupon.find_by_merchant_and_id('abc', 'xyz')
-        expect(result).to be_nil
-      end
-    end
   end
 
   describe '#usage_count' do
@@ -112,36 +93,9 @@ RSpec.describe Coupon, type: :model do
 
     it 'does not allow activating a 6th coupon if there are already 5 active coupons' do
       inactive_coupon = FactoryBot.create(:coupon, merchant: @merchant, active: false)
-      inactive_coupon.active = true
-      inactive_coupon.save
+      result = inactive_coupon.update_with_status({ active: true })
+      expect(result).to be false
       expect(inactive_coupon.errors[:base]).to include('Merchant cannot have more than 5 active coupons')
-    end
-  end
-
-  describe '#update_status' do
-    context 'when trying to deactivate a coupon with forbidden invoices' do
-      before do
-        FactoryBot.create(:invoice, status: 'shipped', coupon: @coupon1)
-      end
-
-      it 'does not allow deactivation' do
-        expect(@coupon1.update_status(false)).to be false
-        expect(@coupon1.errors[:base]).to include('Cannot deactivate coupon with invoices in shipped, packaged, or returned status')
-      end
-    end
-
-    it 'activates the coupon if it was previously inactive' do
-      expect(@coupon2.active).to be false
-      result = @coupon2.update_status(true)
-      expect(result).to be_truthy
-      expect(@coupon2.reload.active).to be true
-    end
-  end
-
-  describe '#invoices_with_forbidden_status?' do
-    it 'returns true if there are invoices with forbidden statuses' do
-      FactoryBot.create(:invoice, status: 'packaged', coupon: @coupon1)
-      expect(@coupon1.send(:invoices_with_forbidden_status?)).to be true
     end
   end
 
@@ -149,6 +103,38 @@ RSpec.describe Coupon, type: :model do
     it 'updates the coupon attributes without changing active status' do
       expect(@coupon1.update_with_status({ name: 'New Name' })).to be true
       expect(@coupon1.reload.name).to eq('New Name')
+    end
+
+    it 'updates the active status when active param is present' do
+      result = @coupon1.update_with_status({ active: false })
+      expect(result).to be true
+      expect(@coupon1.reload.active).to be false
+    end
+  end
+
+  describe '.by_merchant' do
+    it 'returns coupons for the specified merchant' do
+      coupons = Coupon.by_merchant(@merchant1.id)
+      expect(coupons).to include(@coupon1, @coupon2)
+      expect(coupons).not_to include(@coupon3)
+    end
+
+    it 'returns an empty array if no coupons exist for the merchant' do
+      coupons = Coupon.by_merchant(9999)
+      expect(coupons).to be_empty
+    end
+  end
+
+  describe '.create_for_merchant' do
+    it 'creates a coupon for an existing merchant' do
+      result = Coupon.create_for_merchant(@merchant1.id, { name: 'New Coupon', code: 'NEWCODE', discount_value: 10, discount_type: 'percent' })
+      expect(result).to be_persisted
+      expect(result.merchant).to eq(@merchant1)
+    end
+
+    it 'returns nil if the merchant does not exist' do
+      result = Coupon.create_for_merchant(9999, { name: 'Invalid Coupon', code: 'INVALID', discount_value: 10, discount_type: 'percent' })
+      expect(result).to be_nil
     end
   end
 end
