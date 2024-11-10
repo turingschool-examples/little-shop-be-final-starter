@@ -66,4 +66,26 @@ RSpec.describe 'Merchant Coupons endpoints' do
       expect(json[:attributes][:name]).to eq(updated_coupon)
     end
   end
+
+  describe 'should update a coupon status' do
+    let(:coupon) { create(:coupon, merchant: merchant, status: false) }
+
+    it 'can change status of the coupon' do
+      patch activate_api_v1_merchant_coupon_path(merchant_id: merchant.id, id: coupon.id)
+      expect(response).to have_http_status(:ok)
+      json = JSON.parse(response.body, symbolize_names: true)[:data]
+      expect(json[:attributes][:status]).to eq(true)
+    end
+  end
+
+  describe 'should update a coupon status' do
+    let(:coupon) { create(:coupon, merchant: merchant, status: true) }
+
+    it 'can change status of the coupon' do
+      patch deactivate_api_v1_merchant_coupon_path(merchant_id: merchant.id, id: coupon.id)
+      expect(response).to have_http_status(:ok)
+      json = JSON.parse(response.body, symbolize_names: true)[:data]
+      expect(json[:attributes][:status]).to eq(false)
+    end
+  end
 end
