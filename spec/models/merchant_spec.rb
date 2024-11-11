@@ -2,7 +2,7 @@ require 'rails_helper'
 
 describe Merchant, type: :model do
   describe 'validations' do
-    it { should validate_presence_of(:name)}
+    it { should validate_presence_of(:name) }
   end
 
   describe 'relationships' do
@@ -43,47 +43,43 @@ describe Merchant, type: :model do
       expect(Merchant.find_all_by_name("ring")).to eq([merchant1, merchant2])
     end
   end
-  
-    describe 'instance methods' do
-      it "#coupons_count should return the total count of coupons for the merchant" do
-        merchant = create(:merchant)
-        merchant2 = create(:merchant)
-  
-        coupon1 = create(:coupon, merchant: merchant)
-        coupon2 = create(:coupon, merchant: merchant)
-        coupon3 = create(:coupon, merchant: merchant2)
-  
-        expect(merchant.coupons_count).to eq(2)
-        expect(merchant2.coupons_count).to eq(1)
-      end
-  
-      it "#invoice_coupon_count should return the count of invoices with coupons applied" do
-        merchant = create(:merchant)
-        merchant2 = create(:merchant)
-  
-        customer1 = create(:customer)
-        customer2 = create(:customer)
-  
-        coupon1 = create(:coupon, merchant: merchant)
-        coupon2 = create(:coupon, merchant: merchant2)
-  
-        invoice1 = create(:invoice, customer: customer1, merchant: merchant, coupon: coupon1)
-        invoice2 = create(:invoice, customer: customer2, merchant: merchant, coupon: coupon1)
-        invoice3 = create(:invoice, customer: customer2, merchant: merchant) 
-        invoice4 = create(:invoice, customer: customer1, merchant: merchant2, coupon: coupon2)
-  
-        expect(merchant.invoice_coupon_count).to eq(2)
-        expect(merchant2.invoice_coupon_count).to eq(1)
-      end
+
+  describe 'instance methods' do
+    it "#coupons_count should return the total count of coupons for the merchant" do
+      merchant = create(:merchant)
+      merchant2 = create(:merchant)
+
+      coupon1 = create(:coupon, merchant: merchant)
+      coupon2 = create(:coupon, merchant: merchant)
+      coupon3 = create(:coupon, merchant: merchant2)
+
+      expect(merchant.coupons_count).to eq(2)
+      expect(merchant2.coupons_count).to eq(1)
+    end
+
+    it "#invoice_coupon_count should return the count of invoices with coupons applied" do
+      merchant = create(:merchant)
+      merchant2 = create(:merchant)
+
+      customer1 = create(:customer)
+      customer2 = create(:customer)
+
+      coupon1 = create(:coupon, merchant: merchant)
+      coupon2 = create(:coupon, merchant: merchant2)
+
+      invoice1 = create(:invoice, customer: customer1, merchant: merchant, coupon: coupon1)
+      invoice2 = create(:invoice, customer: customer2, merchant: merchant, coupon: coupon1)
+      invoice3 = create(:invoice, customer: customer2, merchant: merchant)
+      invoice4 = create(:invoice, customer: customer1, merchant: merchant2, coupon: coupon2)
+
+      expect(merchant.invoice_coupon_count).to eq(2)
+      expect(merchant2.invoice_coupon_count).to eq(1)
     end
 
     it "#item_count should return the count of items for a merchant" do
       merchant = Merchant.create!(name: "My merchant")
       merchant2 = Merchant.create!(name: "My other merchant")
 
-      # These FactoryBot methods create lots of test data quickly with random attributes
-      # The line below is the equivalent of running `merchant.items.create!` 8 times
-      # In your new tests, you do not need to use FactoryBot unless you'd like to explore it
       create_list(:item, 8, merchant_id: merchant.id)
       create_list(:item, 4, merchant_id: merchant2.id)
 
@@ -101,7 +97,6 @@ describe Merchant, type: :model do
 
       create_list(:invoice, 3, merchant_id: merchant1.id, customer_id: customer1.id)
       create_list(:invoice, 2, merchant_id: merchant1.id, customer_id: customer2.id)
-
       create_list(:invoice, 2, merchant_id: merchant2.id, customer_id: customer3.id)
 
       expect(merchant1.distinct_customers).to match_array([customer1, customer2])
@@ -112,6 +107,7 @@ describe Merchant, type: :model do
       merchant = create(:merchant)
       other_merchant = create(:merchant)
       customer = create(:customer)
+
       inv_1_shipped = Invoice.create!(status: "shipped", merchant: merchant, customer: customer)
       inv_2_shipped = Invoice.create!(status: "shipped", merchant: merchant, customer: customer)
       inv_3_packaged = Invoice.create!(status: "packaged", merchant: merchant, customer: customer)
@@ -126,28 +122,29 @@ describe Merchant, type: :model do
   end
 
   describe '#fetch_invoices' do
-  it 'returns all invoices when no status is provided' do
-    merchant = FactoryBot.create(:merchant)
-    customer = FactoryBot.create(:customer)
-    
-    invoice1 = FactoryBot.create(:invoice, merchant: merchant, customer: customer, status: 'packaged')
-    invoice2 = FactoryBot.create(:invoice, merchant: merchant, customer: customer, status: 'shipped')
+    it 'returns all invoices when no status is provided' do
+      merchant = FactoryBot.create(:merchant)
+      customer = FactoryBot.create(:customer)
 
-    invoices = merchant.fetch_invoices
-    expect(invoices.count).to eq(2)
-    expect(invoices).to include(invoice1, invoice2)
-  end
+      invoice1 = FactoryBot.create(:invoice, merchant: merchant, customer: customer, status: 'packaged')
+      invoice2 = FactoryBot.create(:invoice, merchant: merchant, customer: customer, status: 'shipped')
 
-  it 'filters invoices by status when a status is provided' do
-    merchant = FactoryBot.create(:merchant)
-    customer = FactoryBot.create(:customer)
-    
-    FactoryBot.create(:invoice, merchant: merchant, customer: customer, status: 'packaged')
-    shipped_invoice = FactoryBot.create(:invoice, merchant: merchant, customer: customer, status: 'shipped')
+      invoices = merchant.fetch_invoices
+      expect(invoices.count).to eq(2)
+      expect(invoices).to include(invoice1, invoice2)
+    end
 
-    shipped_invoices = merchant.fetch_invoices('shipped')
-    expect(shipped_invoices.count).to eq(1)
-    expect(shipped_invoices.first.status).to eq('shipped')
-    expect(shipped_invoices.first).to eq(shipped_invoice)
+    it 'filters invoices by status when a status is provided' do
+      merchant = FactoryBot.create(:merchant)
+      customer = FactoryBot.create(:customer)
+
+      FactoryBot.create(:invoice, merchant: merchant, customer: customer, status: 'packaged')
+      shipped_invoice = FactoryBot.create(:invoice, merchant: merchant, customer: customer, status: 'shipped')
+
+      shipped_invoices = merchant.fetch_invoices('shipped')
+      expect(shipped_invoices.count).to eq(1)
+      expect(shipped_invoices.first.status).to eq('shipped')
+      expect(shipped_invoices.first).to eq(shipped_invoice)
+    end
   end
 end

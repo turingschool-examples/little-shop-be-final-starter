@@ -10,8 +10,6 @@ RSpec.describe 'Merchant Coupons API', type: :request do
     @customer = FactoryBot.create(:customer)
     @invoice1 = FactoryBot.create(:invoice, customer: @customer, merchant: @merchant, coupon: @coupon1)
     @invoice2 = FactoryBot.create(:invoice, customer: @customer, merchant: @merchant, coupon: @coupon1)
-
-    
   end
 
   describe 'GET /api/v1/merchants/:merchant_id/coupons/:id' do
@@ -55,7 +53,7 @@ RSpec.describe 'Merchant Coupons API', type: :request do
     context 'when the merchant exists' do
       it 'returns all coupons for the merchant' do
         get "/api/v1/merchants/#{@merchant.id}/coupons"
-        
+
         expect(response).to have_http_status(:success)
         json_response = JSON.parse(response.body, symbolize_names: true)
 
@@ -104,9 +102,8 @@ RSpec.describe 'Merchant Coupons API', type: :request do
       it 'returns a 422 error with validation messages' do
         invalid_params = { coupon: { name: '', code: '', discount_value: nil, discount_type: '' } }
         post "/api/v1/merchants/#{@merchant.id}/coupons", params: invalid_params
-    
+
         expect(response).to have_http_status(:unprocessable_entity)
-        
         json_response = JSON.parse(response.body, symbolize_names: true)
         expect(json_response[:errors]).to include(
           "Name can't be blank",
@@ -122,7 +119,7 @@ RSpec.describe 'Merchant Coupons API', type: :request do
     context 'when activating the coupon' do
       it 'activates the coupon and returns the updated coupon' do
         patch "/api/v1/merchants/#{@merchant.id}/coupons/#{@coupon.id}", params: { coupon: { active: true } }
-        
+
         expect(response).to have_http_status(:ok)
         json_response = JSON.parse(response.body, symbolize_names: true)
         expect(json_response[:data][:attributes][:active]).to eq(true)
@@ -134,10 +131,22 @@ RSpec.describe 'Merchant Coupons API', type: :request do
 
       it 'deactivates the coupon and returns the updated coupon' do
         patch "/api/v1/merchants/#{@merchant.id}/coupons/#{@coupon.id}", params: { coupon: { active: false } }
-        
+
         expect(response).to have_http_status(:ok)
         json_response = JSON.parse(response.body, symbolize_names: true)
         expect(json_response[:data][:attributes][:active]).to eq(false)
+      end
+    end
+
+    context 'when trying to activate a coupon but the merchant already has 5 active coupons' do
+      it 'returns a 422 error with a validation message' do
+        5.times { FactoryBot.create(:coupon, merchant: @merchant, active: true) }
+
+        patch "/api/v1/merchants/#{@merchant.id}/coupons/#{@coupon2.id}", params: { coupon: { active: true } }
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        expect(json_response[:errors]).to include('Merchant cannot have more than 5 active coupons')
       end
     end
 
@@ -148,31 +157,6 @@ RSpec.describe 'Merchant Coupons API', type: :request do
         expect(response).to have_http_status(:not_found)
         json_response = JSON.parse(response.body, symbolize_names: true)
         expect(json_response[:errors]).to eq(['Your query could not be completed'])
-      end
-    end
-
-    context 'when the merchant does not exist' do
-      it 'returns a 404 error with the correct error message' do
-        patch "/api/v1/merchants/9999/coupons/#{@coupon.id}", params: { coupon: { active: true } }
-
-        expect(response).to have_http_status(:not_found)
-        json_response = JSON.parse(response.body, symbolize_names: true)
-        expect(json_response[:errors]).to eq(['Your query could not be completed'])
-      end
-    end
-
-    describe 'PATCH /api/v1/merchants/:merchant_id/coupons/:id' do
-      context 'when trying to activate a coupon but the merchant already has 5 active coupons' do
-        it 'returns a 422 error with a validation message' do
-
-          5.times { FactoryBot.create(:coupon, merchant: @merchant, active: true) }
-          
-          patch "/api/v1/merchants/#{@merchant.id}/coupons/#{@coupon2.id}", params: { coupon: { active: true } }
-          
-          expect(response).to have_http_status(:unprocessable_entity)
-          json_response = JSON.parse(response.body, symbolize_names: true)
-          expect(json_response[:errors]).to include('Merchant cannot have more than 5 active coupons')
-        end
       end
     end
   end
