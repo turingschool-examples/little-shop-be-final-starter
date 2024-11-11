@@ -28,7 +28,6 @@ RSpec.describe 'Merchant Coupons endpoints' do
       get api_v1_merchant_coupons_path(merchant_id: merchant.id), params: { status: 'inactive'}
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body, symbolize_names: true)
-      puts "Response JSON: #{json}"
       expect(json[:data].count).to eq(2)
       expect(json[:data].all? { |coupon| coupon[:attributes][:status] == false } ).to be true
     end
@@ -103,6 +102,26 @@ RSpec.describe 'Merchant Coupons endpoints' do
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body, symbolize_names: true)[:data]
       expect(json[:attributes][:status]).to eq(false)
+    end
+  end
+
+  describe 'sad paths' do
+    let(:coupon) { create(:coupon, merchant: merchant) }
+
+    it 'returns a 404 status updating invalid coupon' do
+      patch api_v1_merchant_coupon_path(merchant_id: merchant.id, id: 0), params: { coupon: { name: '' } }, as: :json
+
+      expect(response).to have_http_status(:not_found)
+      json = JSON.parse(response.body, symbolize_names: true)
+      expect(json[:errors].first).to include("Couldn't find Coupon with 'id'=0")
+    end
+
+    it 'returns a 422 status with invalid params' do
+      patch api_v1_merchant_coupon_path(merchant_id: merchant.id, id: coupon.id), params: { status: '' }, as: :json
+
+      expect(response).to have_http_status(:bad_request)
+      json = JSON.parse(response.body, symbolize_names: true)
+      expect(json[:errors]).to include('Invalid parameters')
     end
   end
 end
