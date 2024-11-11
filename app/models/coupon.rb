@@ -40,3 +40,5 @@ class Coupon < ApplicationRecord
     end
   end
 end
+
+

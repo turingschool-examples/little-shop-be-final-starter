@@ -1,140 +1,177 @@
 require 'rails_helper'
 
-RSpec.describe Coupon, type: :model do
+RSpec.describe 'Merchant Coupons API', type: :request do
   before(:each) do
-    @merchant1 = FactoryBot.create(:merchant)
-    @merchant2 = FactoryBot.create(:merchant)
+    Faker::UniqueGenerator.clear
+    @merchant = FactoryBot.create(:merchant)
+    @coupon = FactoryBot.create(:coupon, merchant: @merchant, active: false)
+    @coupon1 = FactoryBot.create(:coupon, merchant: @merchant, discount_type: 'percent', discount_value: 20)
+    @coupon2 = FactoryBot.create(:coupon, merchant: @merchant, discount_type: 'dollar', discount_value: 10)
     @customer = FactoryBot.create(:customer)
-
-    @coupon1 = FactoryBot.create(:coupon, merchant: @merchant1, code: 'SAVE10')
-    @coupon2 = FactoryBot.create(:coupon, merchant: @merchant1, code: 'DISCOUNT20')
-    @coupon3 = FactoryBot.create(:coupon, merchant: @merchant2, code: 'PROMO15')
-
-    @invoice1 = FactoryBot.create(:invoice, customer: @customer, merchant: @merchant1, coupon: @coupon1)
-    @invoice2 = FactoryBot.create(:invoice, customer: @customer, merchant: @merchant1, coupon: @coupon1)
-    @invoice3 = FactoryBot.create(:invoice, customer: @customer, merchant: @merchant1, coupon: @coupon2)
+    @invoice1 = FactoryBot.create(:invoice, customer: @customer, merchant: @merchant, coupon: @coupon1)
+    @invoice2 = FactoryBot.create(:invoice, customer: @customer, merchant: @merchant, coupon: @coupon1)
   end
 
-  describe 'associations' do
-    it { should belong_to(:merchant) }
-    it { should have_many(:invoices) }
-  end
+  describe 'GET /api/v1/merchants/:merchant_id/coupons/:id' do
+    context 'when the coupon exists' do
+      it 'returns the coupon details along with usage count' do
+        get "/api/v1/merchants/#{@merchant.id}/coupons/#{@coupon1.id}"
 
-  describe 'validations' do
-    subject { FactoryBot.create(:coupon) }
-
-    it { should validate_presence_of(:name) }
-    it { should validate_presence_of(:code) }
-    it { should validate_uniqueness_of(:code) }
-    it { should validate_presence_of(:discount_value) }
-    it { should validate_inclusion_of(:discount_type).in_array(['percent', 'dollar']) }
-  end
-
-  describe '.find_by_merchant_and_id' do
-    context 'when the coupon exists for the specified merchant' do
-      it 'returns the coupon' do
-        result = Coupon.find_by_merchant_and_id(@merchant1.id, @coupon1.id)
-        expect(result).to eq(@coupon1)
-      end
-    end
-
-    context 'when the coupon does not belong to the specified merchant' do
-      it 'returns nil' do
-        result = Coupon.find_by_merchant_and_id(@merchant1.id, @coupon3.id)
-        expect(result).to be_nil
+        expect(response).to have_http_status(:success)
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        expect(json_response[:data][:id]).to eq(@coupon1.id.to_s)
+        expect(json_response[:data][:attributes][:name]).to eq(@coupon1.name)
+        expect(json_response[:data][:attributes][:discount_type]).to eq(@coupon1.discount_type)
+        expect(json_response[:data][:attributes][:discount_value]).to eq(@coupon1.discount_value)
+        expect(json_response[:data][:attributes][:active]).to eq(@coupon1.active)
+        expect(json_response[:data][:attributes][:usage_count]).to eq(2)
       end
     end
 
     context 'when the coupon does not exist' do
-      it 'returns nil' do
-        result = Coupon.find_by_merchant_and_id(@merchant1.id, 9999)
-        expect(result).to be_nil
+      it 'returns a 404 error with the correct error message' do
+        get "/api/v1/merchants/#{@merchant.id}/coupons/9999"
+
+        expect(response).to have_http_status(:not_found)
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        expect(json_response[:errors]).to eq(['Your query could not be completed'])
+      end
+    end
+
+    context 'when the merchant does not exist' do
+      it 'returns a 404 error with the correct error message' do
+        get "/api/v1/merchants/9999/coupons/#{@coupon1.id}"
+
+        expect(response).to have_http_status(:not_found)
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        expect(json_response[:errors]).to eq(['Your query could not be completed'])
       end
     end
   end
 
-  describe '#usage_count' do
-    it 'returns the correct count of associated invoices' do
-      expect(@coupon1.usage_count).to eq(2)
+  describe 'GET /api/v1/merchants/:merchant_id/coupons' do
+    context 'when the merchant exists' do
+      it 'returns all coupons for the merchant' do
+        get "/api/v1/merchants/#{@merchant.id}/coupons"
+        
+        expect(response).to have_http_status(:success)
+        json_response = JSON.parse(response.body, symbolize_names: true)
+
+        expect(json_response[:data].length).to eq(3)
+        expect(json_response[:data][0][:attributes][:merchant_id]).to eq(@merchant.id)
+        expect(json_response[:data][1][:attributes][:merchant_id]).to eq(@merchant.id)
+      end
     end
 
-    it 'returns 0 when there are no associated invoices' do
-      new_coupon = FactoryBot.create(:coupon, merchant: @merchant1)
-      expect(new_coupon.usage_count).to eq(0)
-    end
-  end
+    context 'when the merchant does not exist' do
+      it 'returns a 404 error' do
+        get "/api/v1/merchants/9999/coupons"
 
-  context 'when the coupon code is not unique' do
-    it 'is not valid' do
-      FactoryBot.create(:coupon, merchant: @merchant1, code: 'SAVEMONEY')
-      duplicate_coupon = FactoryBot.build(:coupon, merchant: @merchant2, code: 'SAVEMONEY')
-
-      expect(duplicate_coupon.valid?).to be_falsey
-      expect(duplicate_coupon.errors[:code]).to include('has already been taken')
-    end
-  end
-
-  context 'when a merchant has 5 active coupons' do
-    before(:each) do
-      @merchant = FactoryBot.create(:merchant)
-      FactoryBot.create_list(:coupon, 5, merchant: @merchant, active: true)
-    end
-
-    it 'does not allow creating a 6th active coupon' do
-      new_coupon = FactoryBot.build(:coupon, merchant: @merchant, active: true)
-      expect(new_coupon.valid?).to be_falsey
-      expect(new_coupon.errors[:base]).to include('Merchant cannot have more than 5 active coupons')
-    end
-
-    it 'allows creating an inactive coupon' do
-      new_coupon = FactoryBot.build(:coupon, merchant: @merchant, active: false)
-      expect(new_coupon.valid?).to be_truthy
-    end
-
-    it 'does not allow activating a 6th coupon if there are already 5 active coupons' do
-      inactive_coupon = FactoryBot.create(:coupon, merchant: @merchant, active: false)
-      result = inactive_coupon.update_with_status({ active: true })
-      expect(result).to be false
-      expect(inactive_coupon.errors[:base]).to include('Merchant cannot have more than 5 active coupons')
+        expect(response).to have_http_status(:not_found)
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        expect(json_response[:errors]).to eq(["Your query could not be completed"])
+      end
     end
   end
 
-  describe '#update_with_status' do
-    it 'updates the coupon attributes without changing active status' do
-      expect(@coupon1.update_with_status({ name: 'New Name' })).to be true
-      expect(@coupon1.reload.name).to eq('New Name')
+  describe 'POST /api/v1/merchants/:merchant_id/coupons' do
+    context 'when the request is valid' do
+      it 'creates a new coupon' do
+        coupon_params = {
+          coupon: {
+            name: 'Holiday Discount',
+            code: 'HOLIDAY2024',
+            discount_value: 25,
+            discount_type: 'percent',
+            active: true
+          }
+        }
+        post "/api/v1/merchants/#{@merchant.id}/coupons", params: coupon_params
+
+        expect(response).to have_http_status(:created)
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        expect(json_response[:data][:attributes][:name]).to eq('Holiday Discount')
+        expect(json_response[:data][:attributes][:code]).to eq('HOLIDAY2024')
+        expect(json_response[:data][:attributes][:discount_value]).to eq(25)
+        expect(json_response[:data][:attributes][:discount_type]).to eq('percent')
+        expect(json_response[:data][:attributes][:active]).to be true
+      end
     end
 
-    it 'updates the active status when active param is present' do
-      result = @coupon1.update_with_status({ active: false })
-      expect(result).to be true
-      expect(@coupon1.reload.active).to be false
+    context 'when the request is invalid' do
+      it 'returns a 422 error with validation messages' do
+        invalid_params = { coupon: { name: '', code: '', discount_value: nil, discount_type: '' } }
+        post "/api/v1/merchants/#{@merchant.id}/coupons", params: invalid_params
+    
+        expect(response).to have_http_status(:unprocessable_entity)
+        
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        expect(json_response[:errors]).to include(
+          "Name can't be blank",
+          "Code can't be blank",
+          "Discount value can't be blank",
+          "Discount type is not included in the list"
+        )
+      end
     end
   end
 
-  describe '.by_merchant' do
-    it 'returns coupons for the specified merchant' do
-      coupons = Coupon.by_merchant(@merchant1.id)
-      expect(coupons).to include(@coupon1, @coupon2)
-      expect(coupons).not_to include(@coupon3)
+  describe 'PATCH /api/v1/merchants/:merchant_id/coupons/:id' do
+    context 'when activating the coupon' do
+      it 'activates the coupon and returns the updated coupon' do
+        patch "/api/v1/merchants/#{@merchant.id}/coupons/#{@coupon.id}", params: { coupon: { active: true } }
+        
+        expect(response).to have_http_status(:ok)
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        expect(json_response[:data][:attributes][:active]).to eq(true)
+      end
     end
 
-    it 'returns an empty array if no coupons exist for the merchant' do
-      coupons = Coupon.by_merchant(9999)
-      expect(coupons).to be_empty
-    end
-  end
+    context 'when deactivating the coupon' do
+      before { @coupon.update(active: true) }
 
-  describe '.create_for_merchant' do
-    it 'creates a coupon for an existing merchant' do
-      result = Coupon.create_for_merchant(@merchant1.id, { name: 'New Coupon', code: 'NEWCODE', discount_value: 10, discount_type: 'percent' })
-      expect(result).to be_persisted
-      expect(result.merchant).to eq(@merchant1)
+      it 'deactivates the coupon and returns the updated coupon' do
+        patch "/api/v1/merchants/#{@merchant.id}/coupons/#{@coupon.id}", params: { coupon: { active: false } }
+        
+        expect(response).to have_http_status(:ok)
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        expect(json_response[:data][:attributes][:active]).to eq(false)
+      end
     end
 
-    it 'returns nil if the merchant does not exist' do
-      result = Coupon.create_for_merchant(9999, { name: 'Invalid Coupon', code: 'INVALID', discount_value: 10, discount_type: 'percent' })
-      expect(result).to be_nil
+    context 'when the coupon does not exist' do
+      it 'returns a 404 error with the correct error message' do
+        patch "/api/v1/merchants/#{@merchant.id}/coupons/9999", params: { coupon: { active: true } }
+
+        expect(response).to have_http_status(:not_found)
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        expect(json_response[:errors]).to eq(['Your query could not be completed'])
+      end
+    end
+
+    context 'when the merchant does not exist' do
+      it 'returns a 404 error with the correct error message' do
+        patch "/api/v1/merchants/9999/coupons/#{@coupon.id}", params: { coupon: { active: true } }
+
+        expect(response).to have_http_status(:not_found)
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        expect(json_response[:errors]).to eq(['Your query could not be completed'])
+      end
+    end
+
+    describe 'PATCH /api/v1/merchants/:merchant_id/coupons/:id' do
+      context 'when trying to activate a coupon but the merchant already has 5 active coupons' do
+        it 'returns a 422 error with a validation message' do
+          
+          5.times { FactoryBot.create(:coupon, merchant: @merchant, active: true) }
+          
+          patch "/api/v1/merchants/#{@merchant.id}/coupons/#{@coupon2.id}", params: { coupon: { active: true } }
+          
+          expect(response).to have_http_status(:unprocessable_entity)
+          json_response = JSON.parse(response.body, symbolize_names: true)
+          expect(json_response[:errors]).to include('Merchant cannot have more than 5 active coupons')
+        end
+      end
     end
   end
 end
