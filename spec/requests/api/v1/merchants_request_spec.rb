@@ -202,4 +202,5 @@ describe "Merchant endpoints", :type => :request do
     end
 
   end
+  
 end

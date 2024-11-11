@@ -40,6 +40,10 @@ class Merchant < ApplicationRecord
     invoices.where(status: status)
   end
 
+  def fetch_invoices(status = nil)
+    status.present? ? invoices_filtered_by_status(status) : invoices
+  end
+
   def self.find_all_by_name(name)
     Merchant.where("name iLIKE ?", "%#{name}%")
   end
