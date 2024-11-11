@@ -51,4 +51,14 @@ RSpec.describe Coupon, type: :model do
       expect(dollar_off.discount_type).to eq('dollar_off')
     end
   end
+
+  describe '.filter_by_status' do
+    it 'returns ony active coupons' do
+      expect(Coupon.filter_by_status('active')).to contain_exactly(active_coupon)
+    end
+
+    it 'returns only inactive coupons' do
+      expect(Coupon.filter_by_status('inactive')).to contain_exactly(inactive_coupon)
+    end
+  end
 end
