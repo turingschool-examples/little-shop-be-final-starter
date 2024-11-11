@@ -13,6 +13,23 @@ class Api::V1::Merchants::CouponsController < ApplicationController
     render json: CouponSerializer.new(coupon, { params: {used_count: coupon.used_count }})
   end
 
+  def create
+    merchant = Merchant.find(params[:merchant_id])
+    coupon = merchant.coupons.new(coupon_params)
+
+    if coupon.save 
+      render json: CouponSerializer.new(coupon), status: :created
+    else
+      render json: ErrorSerializer.format_errors(coupon.errors.full_messages), status: :bad_request
+    end
+  end
+
+
+  private
+
+  def coupon_params
+    params.permit(:name, :code, :value, :active)
+  end
 
   def record_not_found(exception)
     render json: ErrorSerializer.format_record_not_found(exception.model), status: :not_found
