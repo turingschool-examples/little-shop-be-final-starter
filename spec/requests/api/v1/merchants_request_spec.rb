@@ -200,6 +200,45 @@ describe "Merchant endpoints", :type => :request do
       
       expect(response).to have_http_status(:no_content)
     end
+  end
 
+  describe 'Merchant invoices and coupons' do
+    it 'should retrun merchants with coupon counts' do
+      merchant1 = create(:merchant)
+      create_list(:coupon, 3, merchant: merchant1)
+      coupon1 = create(:coupon, merchant: merchant1)
+
+      merchant2 = create(:merchant)
+      create_list(:coupon, 2, merchant: merchant2)
+      get "/api/v1/merchants"
+      json = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to have_http_status(:ok)
+      expect(json[:data].count).to eq(2)
+      expect(json[:data][0][:attributes][:coupons_count]).to eq(4)
+      expect(json[:data][1][:attributes][:coupons_count]).to eq(2)
+    end
+
+    it 'should return merchants invoices with coupon counts' do
+      customer = create(:customer)
+      merchant1 = create(:merchant)
+      merchant2 = create(:merchant)
+
+      coupon1 = create(:coupon, merchant: merchant1)
+      coupon2 = create(:coupon, merchant: merchant2)
+
+      invoice1 = create(:invoice, customer: customer, merchant: merchant1, coupon: coupon1)
+      create(:invoice, customer: customer, merchant: merchant1)
+
+      invoice2 = create(:invoice, customer: customer, merchant: merchant2, coupon: coupon2)
+      get "/api/v1/merchants"
+      json = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to have_http_status(:ok)
+      expect(json[:data].count).to eq(2)
+
+      expect(json[:data][0][:attributes][:invoice_coupon_count]).to eq(1)
+      expect(json[:data][1][:attributes][:invoice_coupon_count]).to eq(1)
+    end
   end
 end
