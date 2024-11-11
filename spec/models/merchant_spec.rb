@@ -43,8 +43,40 @@ describe Merchant, type: :model do
       expect(Merchant.find_all_by_name("ring")).to eq([merchant1, merchant2])
     end
   end
+  
+    describe 'instance methods' do
+      it "#coupons_count should return the total count of coupons for the merchant" do
+        merchant = create(:merchant)
+        merchant2 = create(:merchant)
+  
+        coupon1 = create(:coupon, merchant: merchant)
+        coupon2 = create(:coupon, merchant: merchant)
+        coupon3 = create(:coupon, merchant: merchant2)
+  
+        expect(merchant.coupons_count).to eq(2)
+        expect(merchant2.coupons_count).to eq(1)
+      end
+  
+      it "#invoice_coupon_count should return the count of invoices with coupons applied" do
+        merchant = create(:merchant)
+        merchant2 = create(:merchant)
+  
+        customer1 = create(:customer)
+        customer2 = create(:customer)
+  
+        coupon1 = create(:coupon, merchant: merchant)
+        coupon2 = create(:coupon, merchant: merchant2)
+  
+        invoice1 = create(:invoice, customer: customer1, merchant: merchant, coupon: coupon1)
+        invoice2 = create(:invoice, customer: customer2, merchant: merchant, coupon: coupon1)
+        invoice3 = create(:invoice, customer: customer2, merchant: merchant) 
+        invoice4 = create(:invoice, customer: customer1, merchant: merchant2, coupon: coupon2)
+  
+        expect(merchant.invoice_coupon_count).to eq(2)
+        expect(merchant2.invoice_coupon_count).to eq(1)
+      end
+    end
 
-  describe "instance methods" do
     it "#item_count should return the count of items for a merchant" do
       merchant = Merchant.create!(name: "My merchant")
       merchant2 = Merchant.create!(name: "My other merchant")
@@ -118,7 +150,4 @@ describe Merchant, type: :model do
     expect(shipped_invoices.first.status).to eq('shipped')
     expect(shipped_invoices.first).to eq(shipped_invoice)
   end
-
-end
-
 end

@@ -11,6 +11,9 @@ RSpec.describe "Merchant invoices endpoints" do
     @coupon1 = Coupon.create!(name: "Discount10", code: "SAVE10", discount_value: 10, discount_type: "percent", merchant: @merchant1)
     @coupon2 = Coupon.create!(name: "Discount20", code: "SAVE20", discount_value: 20, discount_type: "dollar", merchant: @merchant2)
 
+    @item1_merchant1 = Item.create!(name: "Item 1", description: "Item from Merchant 1", unit_price: 100, merchant: @merchant1)
+    @item2_merchant2 = Item.create!(name: "Item 2", description: "Item from Merchant 2", unit_price: 150, merchant: @merchant2)
+
     @invoice1 = Invoice.create!(customer: @customer1, merchant: @merchant1, status: "packaged")
     Invoice.create!(customer: @customer1, merchant: @merchant1, status: "shipped")
     Invoice.create!(customer: @customer1, merchant: @merchant1, status: "shipped")

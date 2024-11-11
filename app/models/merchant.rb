@@ -7,16 +7,20 @@ class Merchant < ApplicationRecord
   has_many :transactions, through: :invoices
   has_many :coupons
 
-  # def can_activate_coupon?
-  #   coupons.where(active: true).count < 5
-  # end
-
   def self.sorted_by_creation
     Merchant.order("created_at DESC")
   end
 
   def self.filter_by_status(status)
     self.joins(:invoices).where("invoices.status = ?", status).select("distinct merchants.*")
+  end
+
+  def coupons_count
+    coupons.count
+  end
+
+  def invoice_coupon_count
+    invoices.where.not(coupon_id: nil).count
   end
 
   def item_count
