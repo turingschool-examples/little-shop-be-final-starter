@@ -9,4 +9,15 @@ class Coupon < ApplicationRecord
 
   scope :active, -> { where(status: true)}
   scope :inactive, -> { where(status: false)}
+
+  def self.filter_by_status(status)
+    case status
+    when 'active'
+      active
+    when 'inactive'
+      inactive
+    else
+      none
+    end
+  end
 end
