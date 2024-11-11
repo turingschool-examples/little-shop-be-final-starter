@@ -16,8 +16,6 @@ class Coupon < ApplicationRecord
       active
     when 'inactive'
       inactive
-    else
-      none
     end
   end
 end
