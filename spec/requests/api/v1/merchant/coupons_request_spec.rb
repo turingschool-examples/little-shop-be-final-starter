@@ -5,6 +5,9 @@ RSpec.describe "Coupons API", type: :request do
     @merchant = Merchant.create!(name: "Walmart")
     @coupon1 = @merchant.coupons.create!(name: "Discount A", code: "SAVE10", value: 10, active: true)
     @coupon2 = @merchant.coupons.create!(name: "Discount B", code: "SAVE20", value: 20, active: false)
+    @coupon3 = @merchant.coupons.create!(name: "Discount C", code: "SAVE30", value: 15, active: true)
+    @coupon4 = @merchant.coupons.create!(name: "Discount D", code: "SAVE40", value: 25, active: true)
+    @coupon5 = @merchant.coupons.create!(name: "Discount E", code: "SAVE50", value: 30, active: true)
   end
   
   describe "coupon index" do
@@ -15,7 +18,7 @@ RSpec.describe "Coupons API", type: :request do
       expect(response.status).to eq(200)
 
       json = JSON.parse(response.body, symbolize_names: true)
-      expect(json[:data].count).to eq(2)
+      expect(json[:data].count).to eq(5)
 
       json[:data].each do |coupon|
         expect(coupon).to have_key(:id)
@@ -29,15 +32,16 @@ RSpec.describe "Coupons API", type: :request do
       expect(json[:data][1][:attributes][:name]).to eq(@coupon2.name)
     end
     
-      it "returns an error if merchant ID doesn't exist" do
-        get "/api/v1/merchants/9999/coupons"
-        
-        expect(response.status).to eq(404)
-        json = JSON.parse(response.body, symbolize_names: true)
-        
-        expect(json[:message]).to eq("Your query could not be completed")
-        expect(json[:errors]).to eq(["Merchant not found"])
-      end
+    it "returns an error if merchant ID doesn't exist" do
+      get "/api/v1/merchants/9999/coupons"
+      
+      expect(response.status).to eq(404)
+      json = JSON.parse(response.body, symbolize_names: true)
+      
+      expect(json[:message]).to eq("Your query could not be completed")
+      expect(json[:errors]).to eq(["Merchant not found"])
+    end
+  end
 
   describe "coupon show" do
     it "returns the specified coupon" do
@@ -86,5 +90,57 @@ RSpec.describe "Coupons API", type: :request do
     end
   end
 
+  describe "coupon create" do
+    it "can create a new coupon for a merchant" do
+      post "/api/v1/merchants/#{@merchant.id}/coupons", params: {
+        name: "Discount F", 
+        code: "SAVE60", 
+        value: 60, 
+        active: true
+      }
+
+      expect(response).to be_successful
+      expect(response.status).to eq(201)
+
+      json = JSON.parse(response.body, symbolize_names: true)
+
+      expect(json[:data]).to have_key(:id)
+      expect(json[:data][:attributes][:name]).to eq("Discount F")
+      expect(json[:data][:attributes][:code]).to eq("SAVE60")
+      expect(json[:data][:attributes][:value]).to eq(60)
+      expect(json[:data][:attributes][:active]).to eq(true)
+    end
+
+    it "returns an error if the merchant already has 5 active coupons" do
+      post "/api/v1/merchants/#{@merchant.id}/coupons", params: {
+        name: "Discount G", 
+        code: "SAVE70", 
+        value: 70, 
+        active: true
+      }
+
+      expect(response.status).to eq(400)
+      json = JSON.parse(response.body, symbolize_names: true)
+
+      expect(json[:message]).to eq("Your query could not be completed")
+      expect(json[:errors]).to eq(["Merchant already has 5 active coupons"])
+    end
+
+    it "returns an error if the coupon code is not unique" do
+      post "/api/v1/merchants/#{@merchant.id}/coupons", params: {
+        name: "Duplicate Code", 
+        code: "SAVE10", 
+        value: 20, 
+        active: true
+      }
+
+      expect(response.status).to eq(400)
+      json = JSON.parse(response.body, symbolize_names: true)
+
+      expect(json[:message]).to eq("Your query could not be completed")
+      expect(json[:errors]).to eq(["Coupon code must be unique"])
     end
   end
+end
+
+  
