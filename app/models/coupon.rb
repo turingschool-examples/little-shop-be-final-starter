@@ -8,16 +8,11 @@ class Coupon < ApplicationRecord
   validates :discount_type, inclusion: { in: ["percent", "dollar"] }
   validate :merchant_cannot_exceed_five_active_coupons, if: :active?
 
-  # def self.by_merchant(merchant_id)
-  #   where(merchant_id: merchant_id)
-  # end
-
-  def self.by_merchant(merchant_id, active = nil)
+  def self.by_merchant(merchant_id, active_status = nil)
     coupons = where(merchant_id: merchant_id)
-    coupons = coupons.where(active: ActiveModel::Type::Boolean.new.cast(active)) if active.present?
+    coupons = coupons.where(active: active_status) unless active_status.nil?
     coupons
   end
-
 
   def self.find_by_merchant_and_id(merchant_id, coupon_id)
     find_by(merchant_id: merchant_id, id: coupon_id)

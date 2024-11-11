@@ -15,6 +15,10 @@ RSpec.describe Coupon, type: :model do
     @invoice1 = FactoryBot.create(:invoice, customer: @customer, merchant: @merchant1, coupon: @coupon1)
     @invoice2 = FactoryBot.create(:invoice, customer: @customer, merchant: @merchant1, coupon: @coupon1)
     @invoice3 = FactoryBot.create(:invoice, customer: @customer, merchant: @merchant1, coupon: @coupon2)
+
+    @coupon_active1 = FactoryBot.create(:coupon, merchant: @merchant1, active: true)
+    @coupon_active2 = FactoryBot.create(:coupon, merchant: @merchant1, active: true)
+    @coupon_inactive = FactoryBot.create(:coupon, merchant: @merchant1, active: false)
   end
 
   describe 'associations' do
@@ -173,6 +177,42 @@ RSpec.describe Coupon, type: :model do
       end
     end
 
+    describe '.by_merchant' do
+      context 'without active status filter' do
+        it 'returns all coupons for the specified merchant' do
+          coupons = Coupon.by_merchant(@merchant1.id)
+          expect(coupons).to include(@coupon_active1, @coupon_active2, @coupon_inactive)
+          expect(coupons.count).to eq(5)
+        end
+      end
+  
+      context 'with active=true filter' do
+        it 'returns only active coupons for the specified merchant' do
+          coupons = Coupon.by_merchant(@merchant1.id, true)
+          expect(coupons).to include(@coupon_active1, @coupon_active2)
+          expect(coupons).not_to include(@coupon_inactive)
+          expect(coupons.count).to eq(2)
+        end
+      end
+  
+      describe '.by_merchant' do
+        context 'with active=false filter' do
+          it 'returns only inactive coupons for the specified merchant' do
+            
+            merchant = FactoryBot.create(:merchant)
+      
+            active_coupon = FactoryBot.create(:coupon, merchant: merchant, active: true)
+            inactive_coupon1 = FactoryBot.create(:coupon, merchant: merchant, active: false)
+            inactive_coupon2 = FactoryBot.create(:coupon, merchant: merchant, active: false)
     
+            coupons = Coupon.by_merchant(merchant.id, false)
+      
+            expect(coupons).to include(inactive_coupon1, inactive_coupon2)
+            expect(coupons).not_to include(active_coupon)
+            expect(coupons.count).to eq(2)
+          end
+        end
+      end
+    end
   end
 end
