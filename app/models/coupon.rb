@@ -5,4 +5,5 @@ class Coupon < ApplicationRecord
   validates :code, presence: true, uniqueness: true
   validates :value, presence: true, numericality: { greater_than: 0 }
   validates :active, inclusion: { in: [true, false] }
+  
 end

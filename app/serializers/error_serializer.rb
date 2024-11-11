@@ -12,4 +12,11 @@ class ErrorSerializer
       errors: ["invalid search params"] 
     }
   end
+
+  def self.format_record_not_found(model)
+    {
+      message: 'Your query could not be completed',
+      errors: ["#{model} not found"]
+    }
+  end
 end
