@@ -3,8 +3,9 @@ class Merchant < ApplicationRecord
   has_many :items, dependent: :destroy
   has_many :invoices, dependent: :destroy
   has_many :customers, through: :invoices
-  # has_many :invoice_items, through: :invoices
-  # has_many :transactions, through: :invoices
+  has_many :invoice_items, through: :invoices
+  has_many :transactions, through: :invoices
+  has_many :coupons
 
   def self.sorted_by_creation
     Merchant.order("created_at DESC")
@@ -12,6 +13,14 @@ class Merchant < ApplicationRecord
 
   def self.filter_by_status(status)
     self.joins(:invoices).where("invoices.status = ?", status).select("distinct merchants.*")
+  end
+
+  def coupons_count
+    coupons.count
+  end
+
+  def invoice_coupon_count
+    invoices.where.not(coupon_id: nil).count
   end
 
   def item_count
@@ -33,6 +42,10 @@ class Merchant < ApplicationRecord
 
   def invoices_filtered_by_status(status)
     invoices.where(status: status)
+  end
+
+  def fetch_invoices(status = nil)
+    status.present? ? invoices_filtered_by_status(status) : invoices
   end
 
   def self.find_all_by_name(name)

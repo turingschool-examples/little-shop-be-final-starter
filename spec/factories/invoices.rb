@@ -3,5 +3,10 @@ FactoryBot.define do
     status { "shipped" }
     customer
     merchant
+    coupon {nil}
+
+    trait :with_coupon do
+      association :coupon
+    end
   end
 end
