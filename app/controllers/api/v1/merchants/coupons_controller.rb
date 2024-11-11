@@ -1,14 +1,17 @@
 class Api::V1::Merchants::CouponsController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
 
-  def index
-    coupons = Coupon.by_merchant(params[:merchant_id])
+ def index
+    active_status = params[:active] 
+    coupons = Coupon.by_merchant(params[:merchant_id], active_status)
+    
     if coupons.present?
       render json: CouponSerializer.new(coupons), status: :ok
     else
       record_not_found
     end
   end
+
 
   def show
     coupon = Coupon.find_by_merchant_and_id(params[:merchant_id], params[:id])
@@ -25,15 +28,7 @@ class Api::V1::Merchants::CouponsController < ApplicationController
       render json: ErrorSerializer.format_errors(coupon&.errors&.full_messages || ['Invalid parameters']), status: :unprocessable_entity
     end
   end
-
-  # def update
-  #   coupon = Coupon.find_by_merchant_and_id(params[:merchant_id], params[:id])
-  #   return record_not_found unless coupon
   
-  #   coupon.update(coupon_params)
-  #   render json: CouponSerializer.new(coupon), status: :ok
-  # end
-
   def update
     coupon = Coupon.find_by_merchant_and_id(params[:merchant_id], params[:id])
     return record_not_found unless coupon

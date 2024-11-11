@@ -10,6 +10,8 @@ RSpec.describe 'Merchant Coupons API', type: :request do
     @customer = FactoryBot.create(:customer)
     @invoice1 = FactoryBot.create(:invoice, customer: @customer, merchant: @merchant, coupon: @coupon1)
     @invoice2 = FactoryBot.create(:invoice, customer: @customer, merchant: @merchant, coupon: @coupon1)
+
+    
   end
 
   describe 'GET /api/v1/merchants/:merchant_id/coupons/:id' do
@@ -162,7 +164,7 @@ RSpec.describe 'Merchant Coupons API', type: :request do
     describe 'PATCH /api/v1/merchants/:merchant_id/coupons/:id' do
       context 'when trying to activate a coupon but the merchant already has 5 active coupons' do
         it 'returns a 422 error with a validation message' do
-          
+
           5.times { FactoryBot.create(:coupon, merchant: @merchant, active: true) }
           
           patch "/api/v1/merchants/#{@merchant.id}/coupons/#{@coupon2.id}", params: { coupon: { active: true } }
