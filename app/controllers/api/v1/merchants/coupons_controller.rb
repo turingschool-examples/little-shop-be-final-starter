@@ -7,7 +7,7 @@ class Api::V1::Merchants::CouponsController < ApplicationController
               else
                 merchant.coupons
               end
-              
+
     render json: CouponSerializer.new(coupons), status: :ok
   end
 
@@ -19,13 +19,16 @@ class Api::V1::Merchants::CouponsController < ApplicationController
 
   def create
     merchant = Merchant.find(params[:merchant_id])
-    coupon = merchant.coupons.new(coupon_params)
+    coupon = merchant.coupons.create!(coupon_params)
     render json: CouponSerializer.new(coupon), status: :created
   end
 
   def update
     merchant = Merchant.find(params[:merchant_id])
     coupon = merchant.coupons.find(params[:id])
+    if coupon_params.empty? || coupon_params.values.any?(&:blank?)
+      render json: ErrorSerializer.format_errors(['Invalid parameters']), status: :bad_request and return
+    end
     coupon.update(coupon_params)
     render json: CouponSerializer.new(coupon), status: :ok
   end
