@@ -38,7 +38,7 @@ RSpec.describe "Coupons API", type: :request do
       expect(response.status).to eq(404)
       json = JSON.parse(response.body, symbolize_names: true)
       expect(json[:message]).to eq("Your query could not be completed")
-      expect(json[:errors]).to eq("Coupon not found")
+      expect(json[:errors]).to eq(["Coupon not found"])
     end
 
     it "returns an error if merchant ID doesn't exist" do
