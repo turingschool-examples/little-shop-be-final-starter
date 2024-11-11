@@ -92,4 +92,33 @@ describe Merchant, type: :model do
       expect(other_merchant.invoices_filtered_by_status("packaged")).to eq([inv_4_packaged])
     end
   end
+
+  describe '#fetch_invoices' do
+  it 'returns all invoices when no status is provided' do
+    merchant = FactoryBot.create(:merchant)
+    customer = FactoryBot.create(:customer)
+    
+    invoice1 = FactoryBot.create(:invoice, merchant: merchant, customer: customer, status: 'packaged')
+    invoice2 = FactoryBot.create(:invoice, merchant: merchant, customer: customer, status: 'shipped')
+
+    invoices = merchant.fetch_invoices
+    expect(invoices.count).to eq(2)
+    expect(invoices).to include(invoice1, invoice2)
+  end
+
+  it 'filters invoices by status when a status is provided' do
+    merchant = FactoryBot.create(:merchant)
+    customer = FactoryBot.create(:customer)
+    
+    FactoryBot.create(:invoice, merchant: merchant, customer: customer, status: 'packaged')
+    shipped_invoice = FactoryBot.create(:invoice, merchant: merchant, customer: customer, status: 'shipped')
+
+    shipped_invoices = merchant.fetch_invoices('shipped')
+    expect(shipped_invoices.count).to eq(1)
+    expect(shipped_invoices.first.status).to eq('shipped')
+    expect(shipped_invoices.first).to eq(shipped_invoice)
+  end
+
+end
+
 end
