@@ -15,6 +15,23 @@ RSpec.describe 'Merchant Coupons endpoints' do
       json = JSON.parse(response.body, symbolize_names: true)
       expect(json[:data].size).to eq(5)
     end
+
+    it 'returns only active coupons when filtered for active' do
+      get api_v1_merchant_coupons_path(merchant_id: merchant.id), params: { status: 'active'}
+      expect(response).to have_http_status(:ok)
+      json = JSON.parse(response.body, symbolize_names: true)
+      expect(json[:data].count).to eq(3)
+      expect(json[:data].all? { |coupon| coupon[:attributes][:status] == true } ).to be true
+    end
+
+    it 'returns only inactive coupons when filtered for inactive' do
+      get api_v1_merchant_coupons_path(merchant_id: merchant.id), params: { status: 'inactive'}
+      expect(response).to have_http_status(:ok)
+      json = JSON.parse(response.body, symbolize_names: true)
+      puts "Response JSON: #{json}"
+      expect(json[:data].count).to eq(2)
+      expect(json[:data].all? { |coupon| coupon[:attributes][:status] == false } ).to be true
+    end
   end
 
   describe 'should return a single coupon' do
@@ -70,7 +87,7 @@ RSpec.describe 'Merchant Coupons endpoints' do
   describe 'should update a coupon status' do
     let(:coupon) { create(:coupon, merchant: merchant, status: false) }
 
-    it 'can change status of the coupon' do
+    it 'can change status of the coupon to active' do
       patch activate_api_v1_merchant_coupon_path(merchant_id: merchant.id, id: coupon.id)
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body, symbolize_names: true)[:data]
@@ -81,7 +98,7 @@ RSpec.describe 'Merchant Coupons endpoints' do
   describe 'should update a coupon status' do
     let(:coupon) { create(:coupon, merchant: merchant, status: true) }
 
-    it 'can change status of the coupon' do
+    it 'can change status of the coupon to inactive' do
       patch deactivate_api_v1_merchant_coupon_path(merchant_id: merchant.id, id: coupon.id)
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body, symbolize_names: true)[:data]
