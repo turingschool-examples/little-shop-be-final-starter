@@ -158,5 +158,20 @@ RSpec.describe 'Merchant Coupons API', type: :request do
         expect(json_response[:errors]).to eq(['Your query could not be completed'])
       end
     end
+
+    describe 'PATCH /api/v1/merchants/:merchant_id/coupons/:id' do
+      context 'when trying to activate a coupon but the merchant already has 5 active coupons' do
+        it 'returns a 422 error with a validation message' do
+          
+          5.times { FactoryBot.create(:coupon, merchant: @merchant, active: true) }
+          
+          patch "/api/v1/merchants/#{@merchant.id}/coupons/#{@coupon2.id}", params: { coupon: { active: true } }
+          
+          expect(response).to have_http_status(:unprocessable_entity)
+          json_response = JSON.parse(response.body, symbolize_names: true)
+          expect(json_response[:errors]).to include('Merchant cannot have more than 5 active coupons')
+        end
+      end
+    end
   end
 end

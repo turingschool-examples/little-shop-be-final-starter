@@ -2,10 +2,12 @@ require 'rails_helper'
 
 RSpec.describe Coupon, type: :model do
   before(:each) do
+    @merchant = FactoryBot.create(:merchant)
     @merchant1 = FactoryBot.create(:merchant)
     @merchant2 = FactoryBot.create(:merchant)
     @customer = FactoryBot.create(:customer)
 
+    @coupon = FactoryBot.create(:coupon, merchant: @merchant, active: false, discount_type: 'percent', discount_value: 10)
     @coupon1 = FactoryBot.create(:coupon, merchant: @merchant1, code: 'SAVE10')
     @coupon2 = FactoryBot.create(:coupon, merchant: @merchant1, code: 'DISCOUNT20')
     @coupon3 = FactoryBot.create(:coupon, merchant: @merchant2, code: 'PROMO15')
@@ -136,5 +138,41 @@ RSpec.describe Coupon, type: :model do
       result = Coupon.create_for_merchant(9999, { name: 'Invalid Coupon', code: 'INVALID', discount_value: 10, discount_type: 'percent' })
       expect(result).to be_nil
     end
+  end
+
+  describe '#update_with_status' do
+    context 'when valid parameters are provided' do
+      it 'updates the coupon attributes successfully' do
+        result = @coupon.update_with_status(active: true, discount_value: 20)
+        
+        expect(result).to be_truthy
+        expect(@coupon.reload.active).to eq(true)
+        expect(@coupon.discount_value).to eq(20)
+      end
+    end
+
+    context 'when invalid parameters are provided' do
+      it 'does not update the coupon and returns false' do
+        result = @coupon.update_with_status(discount_type: 'invalid_type')
+
+        expect(result).to be_falsey
+        expect(@coupon.reload.discount_type).not_to eq('invalid_type')
+        expect(@coupon.errors.full_messages).to include('Discount type is not included in the list')
+      end
+    end
+
+    context 'when validations prevent update' do
+      it 'does not update the coupon when merchant exceeds active coupon limit' do
+    
+        5.times { FactoryBot.create(:coupon, merchant: @merchant, active: true) }
+        result = @coupon.update_with_status(active: true)
+    
+        expect(result).to be_falsey
+        expect(@coupon.reload.active).to eq(false)
+        expect(@coupon.errors.full_messages).to include('Merchant cannot have more than 5 active coupons')
+      end
+    end
+
+    
   end
 end

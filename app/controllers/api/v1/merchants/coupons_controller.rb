@@ -26,12 +26,23 @@ class Api::V1::Merchants::CouponsController < ApplicationController
     end
   end
 
+  # def update
+  #   coupon = Coupon.find_by_merchant_and_id(params[:merchant_id], params[:id])
+  #   return record_not_found unless coupon
+  
+  #   coupon.update(coupon_params)
+  #   render json: CouponSerializer.new(coupon), status: :ok
+  # end
+
   def update
     coupon = Coupon.find_by_merchant_and_id(params[:merchant_id], params[:id])
     return record_not_found unless coupon
   
-    coupon.update(coupon_params)
-    render json: CouponSerializer.new(coupon), status: :ok
+    if coupon.update_with_status(coupon_params)
+      render json: CouponSerializer.new(coupon), status: :ok
+    else
+      render json: ErrorSerializer.format_errors(coupon.errors.full_messages), status: :unprocessable_entity
+    end
   end
   
 
