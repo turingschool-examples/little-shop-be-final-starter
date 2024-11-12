@@ -2,13 +2,9 @@ class Api::V1::Merchants::CouponsController < ApplicationController
 
   def index
     merchant = Merchant.find(params[:merchant_id])
-    coupons = if params[:status].present?
-                merchant.coupons.filter_by_status(params[:status])
-              else
-                merchant.coupons
-              end
-
-    render json: CouponSerializer.new(coupons), status: :ok
+    coupons = params[:status].present? ? merchant.coupons.filter_by_status(params[:status]) : merchant.coupons
+  
+    render json: CouponSerializer.new(coupons), status: :ok  
   end
 
   def show
@@ -19,30 +15,41 @@ class Api::V1::Merchants::CouponsController < ApplicationController
 
   def create
     merchant = Merchant.find(params[:merchant_id])
-    coupon = merchant.coupons.create!(coupon_params)
-    render json: CouponSerializer.new(coupon), status: :created
+
+    if params.key?(:coupon)
+      coupon = merchant.coupons.new(coupon_params)
+  
+      if coupon.save
+        render json: CouponSerializer.new(coupon), status: :created
+      else
+        render json: { errors: coupon.errors.full_messages }, status: :unprocessable_entity
+      end
+    else
+      render json: { errors: ['Invalid parameters provided'] }, status: :bad_request
+    end
   end
 
   def update
     merchant = Merchant.find(params[:merchant_id])
     coupon = merchant.coupons.find(params[:id])
-    if coupon_params.empty? || coupon_params.values.any?(&:blank?)
-      render json: ErrorSerializer.format_errors(['Invalid parameters']), status: :bad_request and return
+    
+    if coupon.update(coupon_params)
+      render json: CouponSerializer.new(coupon), status: :ok
+    else
+      render json: { errors: ['Invalid parameters provided'] }, status: :unprocessable_entity
     end
-    coupon.update(coupon_params)
-    render json: CouponSerializer.new(coupon), status: :ok
   end
 
   def activate
-    coupon = Merchant.find(params[:merchant_id]).coupons.find(params[:id])
-    coupon.update(status: true)
-    render json: CouponSerializer.new(coupon)
+    coupon = Coupon.find(params[:id])
+    coupon.update(status: "active")
+    render json: CouponSerializer.new(coupon), status: :ok
   end
 
   def deactivate 
-    coupon = Merchant.find(params[:merchant_id]).coupons.find(params[:id])
-    coupon.update(status: false)
-    render json: CouponSerializer.new(coupon)
+    coupon = Coupon.find(params[:id])
+    coupon.update(status: "inactive")
+    render json: CouponSerializer.new(coupon), status: :ok
   end
 
   private

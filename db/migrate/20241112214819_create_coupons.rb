@@ -7,13 +7,11 @@ class CreateCoupons < ActiveRecord::Migration[7.1]
         t.string :discount_type
         t.decimal :discount_value
         t.integer :merchant_id
-        t.boolean :status
-
+        t.string :status
         t.timestamps
-      end
-
-      add_index :coupons, :code, unique: true
-      add_index :coupons, :status
+      end 
+        add_index :coupons, :code, unique: true
+        add_index :coupons, :status
     end
   end
 end

@@ -10,10 +10,12 @@ class Api::V1::Merchants::InvoicesController < ApplicationController
   end
 
   def update
-    merchant = Merchant.find(params[:merchant_id])
-    invoice = merchant.invoices.find(params[:id])
-    invoice.update(invoice_params)
-    render json: InvoiceSerializer.new(invoice), status: :ok
+    invoice = Invoice.find(params[:id])  
+    if invoice.update(invoice_params)
+      render json: InvoiceSerializer.new(invoice), status: :ok
+    else
+      render json: { errors: ['Invalid parameters provided'] }, status: :unprocessable_entity
+    end
   end
 
   private

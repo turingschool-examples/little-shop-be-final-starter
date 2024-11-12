@@ -93,4 +93,35 @@ describe Merchant, type: :model do
       expect(other_merchant.invoices_filtered_by_status("packaged")).to eq([inv_4_packaged])
     end
   end
+  describe 'coupon counting' do
+    it 'returns the number of coupons associated with the merchant' do
+      merchant = create(:merchant)
+      create_list(:coupon, 3, merchant: merchant)
+
+      expect(merchant.coupons_count).to eq(3)
+    end
+
+    it 'returns zero if no coupons are associated with the merchant' do
+      merchant = create(:merchant)
+      expect(merchant.coupons_count).to eq(0)
+    end
+
+    it 'returns the number of invoices that have a coupon applied' do
+      merchant = create(:merchant)
+      customer = create(:customer)
+      coupon = create(:coupon, merchant: merchant)
+      invoice_with_coupon = create(:invoice, merchant: merchant, customer: customer, coupon: coupon)
+      invoice_without_coupon = create(:invoice, merchant: merchant, customer: customer)
+
+      expect(merchant.invoice_coupon_count).to eq(1)
+    end
+
+    it 'returns zero if no invoices have a coupon applied' do
+      merchant = create(:merchant)
+      customer = create(:customer)
+      create_list(:invoice, 3, merchant: merchant, customer: customer)
+
+      expect(merchant.invoice_coupon_count).to eq(0)
+    end
+  end
 end

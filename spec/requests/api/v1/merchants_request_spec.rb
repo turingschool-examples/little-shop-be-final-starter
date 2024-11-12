@@ -205,11 +205,11 @@ describe "Merchant endpoints", :type => :request do
   describe 'Merchant invoices and coupons' do
     it 'should retrun merchants with coupon counts' do
       merchant1 = create(:merchant)
-      create_list(:coupon, 3, merchant: merchant1)
-      coupon1 = create(:coupon, merchant: merchant1)
+      create_list(:coupon, 3, merchant: merchant1, status: "active")
+      coupon1 = create(:coupon, merchant: merchant1, status: "active")
 
       merchant2 = create(:merchant)
-      create_list(:coupon, 2, merchant: merchant2)
+      create_list(:coupon, 2, merchant: merchant2, status: "inactive")
       get "/api/v1/merchants"
       json = JSON.parse(response.body, symbolize_names: true)
 

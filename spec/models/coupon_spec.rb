@@ -2,8 +2,8 @@ require 'rails_helper'
 
 RSpec.describe Coupon, type: :model do
   let(:merchant) { create(:merchant) }
-  let!(:active_coupon) { create(:coupon, :active, merchant: merchant) }
-  let!(:inactive_coupon) { create(:coupon, :inactive, merchant: merchant) }
+  let!(:active_coupon) { create(:coupon, status: 'active', merchant: merchant) }
+  let!(:inactive_coupon) { create(:coupon, status: 'inactive', merchant: merchant) }
 
   describe 'validations' do
     it { should validate_presence_of(:name) }
@@ -34,11 +34,11 @@ RSpec.describe Coupon, type: :model do
 
   describe 'traits' do
     it 'can be created active' do
-      expect(active_coupon.status).to be true
+      expect(active_coupon.status).to eq('active')
     end
 
     it 'can be created inactive' do
-      expect(inactive_coupon.status).to be false
+      expect(inactive_coupon.status).to eq('inactive')
     end
 
     it 'can have percent_off discount' do

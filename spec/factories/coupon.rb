@@ -4,15 +4,15 @@ FactoryBot.define do
     sequence(:code) { |n| "CODE#{n}" }
     discount_type { %w[percent_off dollar_off].sample }
     discount_value { rand(1.0..40.0)}
-    status { true }
+    status { "active" }
     association :merchant
 
     trait :active do
-      status { true }
+      status { "active" }
     end
 
     trait :inactive do
-      status { false }
+      status { "inactive" }
     end
 
     trait :percent_off do

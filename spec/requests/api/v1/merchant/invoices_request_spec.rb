@@ -8,7 +8,7 @@ RSpec.describe "Merchant invoices endpoints" do
     @customer1 = Customer.create!(first_name: "Papa", last_name: "Gino")
     @customer2 = Customer.create!(first_name: "Jimmy", last_name: "John")
 
-    @coupon = Coupon.create!(name: "Something Off", code: "DISCOUNT10", discount_type: "percent_off", discount_value: 10.0, status: true, merchant: @merchant1)
+    @coupon = Coupon.create!(name: "Something Off", code: "DISCOUNT10", discount_type: "percent_off", discount_value: 10.0, status: 'active', merchant: @merchant1)
 
     @invoice1 = Invoice.create!(customer: @customer1, merchant: @merchant1, status: "packaged")
     Invoice.create!(customer: @customer1, merchant: @merchant1, status: "shipped")
@@ -17,6 +17,14 @@ RSpec.describe "Merchant invoices endpoints" do
     @invoice2 = Invoice.create!(customer: @customer1, merchant: @merchant2, status: "shipped")
 
     @invoice_with_coupon = Invoice.create!(customer: @customer1, merchant: @merchant1, status: "shipped", coupon: @coupon)
+  end
+
+  it "should return all invoices for a merchant" do
+    get "/api/v1/merchants/#{@merchant1.id}/invoices"
+
+    expect(response).to have_http_status(:ok)
+    json = JSON.parse(response.body, symbolize_names: true)
+    expect(json[:data].count).to eq(5)
   end
 
   it "should return all invoices for a given merchant based on status param" do
@@ -62,6 +70,26 @@ RSpec.describe "Merchant invoices endpoints" do
     expect(json[:errors]).to be_a Array
     expect(json[:errors].first).to eq("Couldn't find Merchant with 'id'=100000")
   end
+
+  it "should update an invoice correctly" do
+    patch "/api/v1/merchants/#{@merchant1.id}/invoices/#{@invoice1.id}", params: { invoice: { status: "shipped", coupon_id: @coupon.id } }
+
+    expect(response).to have_http_status(:ok)
+    json = JSON.parse(response.body, symbolize_names: true)
+    updated_invoice = json[:data][:attributes]
+
+    expect(updated_invoice[:status]).to eq("shipped")
+    expect(updated_invoice[:coupon_id]).to eq(@coupon.id)
+  end
+
+  it "should return an error if required parameters are missing" do
+    patch "/api/v1/merchants/#{@merchant1.id}/invoices/#{@invoice1.id}", params: { invoice: { status: "invalid_status" } }
+  
+    expect(response).to have_http_status(:unprocessable_entity)
+    json = JSON.parse(response.body, symbolize_names: true)
+  
+    expect(json[:errors]).to include('Invalid parameters provided')
+  end  
 
   describe 'handling coupons' do
     it "should add a coupon to an invoice" do

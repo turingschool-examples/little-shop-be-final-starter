@@ -42,5 +42,22 @@ RSpec.describe Invoice do
       expect(invoice.total_amount).to eq(100)
       expect(invoice.total_after_discount).to eq(0)
     end
+
+    it 'should return the total amount if the coupon discount type is invalid' do
+      merchant = create(:merchant)
+      customer = create(:customer)
+
+      coupon = create(:coupon, merchant: merchant, discount_type: 'percent_off', discount_value: 50)
+
+      coupon.update_column(:discount_type, 'invalid_type')
+
+      invoice = create(:invoice, merchant: merchant, customer: customer, coupon: coupon)
+      item = create(:item, merchant: merchant, unit_price: 50)
+
+      InvoiceItem.create!(invoice: invoice, item: item, quantity: 2, unit_price: 50)
+
+      expect(invoice.total_amount).to eq(100)
+      expect(invoice.total_after_discount).to eq(100)
+    end
   end
 end

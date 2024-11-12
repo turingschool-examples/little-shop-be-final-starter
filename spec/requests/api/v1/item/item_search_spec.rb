@@ -12,6 +12,7 @@ RSpec.describe "Item Search Endpoints" do
         get api_v1_items_find_index_path, params: {name: "rush"}
         json = JSON.parse(response.body, symbolize_names: true)
         
+        expect(response).to have_http_status(:ok)
         expect(json[:data][:attributes][:name]).to eq("brush")
       end
 
@@ -22,7 +23,15 @@ RSpec.describe "Item Search Endpoints" do
 
         get api_v1_items_find_index_path, params: { min_price: 0, max_price: 3}
         json = JSON.parse(response.body, symbolize_names: true)
+        expect(response).to have_http_status(:ok)
         expect(json[:data][:attributes][:name]).to eq("apple")
+      end
+
+      it "should return an empty data object if no item matches the search" do
+        get api_v1_items_find_index_path, params: { name: "nonexistent" }
+        json = JSON.parse(response.body, symbolize_names: true)
+        expect(response).to have_http_status(:ok)
+        expect(json[:data]).to eq({})
       end
     end
 
@@ -71,7 +80,25 @@ RSpec.describe "Item Search Endpoints" do
 
       item_names = json[:data].map { |element| element[:attributes][:name] }
       expect(item_names).to match_array(["apple", "banana"])
+    end
 
+    it "should return all items that match the search name" do
+      item1 = create(:item, name: "blue shirt", merchant: merchant)
+      item2 = create(:item, name: "blue jeans", merchant: merchant)
+      item3 = create(:item, name: "red shoes", merchant: merchant)
+  
+      get api_v1_items_find_all_index_path, params: { name: "blue" }
+      json = JSON.parse(response.body, symbolize_names: true)
+  
+      item_names = json[:data].map { |element| element[:attributes][:name] }
+      expect(item_names).to match_array(["blue shirt", "blue jeans"])
+    end
+
+    it "should return an empty array if no items match the search name" do
+      get api_v1_items_find_all_index_path, params: { name: "nonexistent" }
+      json = JSON.parse(response.body, symbolize_names: true)
+  
+      expect(json[:data]).to eq([])
     end
   end
 end

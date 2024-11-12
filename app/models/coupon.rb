@@ -6,16 +6,9 @@ class Coupon < ApplicationRecord
   validates :code, presence: true, uniqueness: true
   validates :discount_type, presence: true, inclusion: { in: %w[percent_off dollar_off] }
   validates :discount_value, presence: true, numericality: { greater_than: 0 }
-
-  scope :active, -> { where(status: true)}
-  scope :inactive, -> { where(status: false)}
-
-  def self.filter_by_status(status)
-    case status
-    when 'active'
-      active
-    when 'inactive'
-      inactive
-    end
-  end
+  validates :status, inclusion: { in: ["active", "inactive"] }
+  
+  scope :active, -> { where(status: "active") }
+  scope :inactive, -> { where(status: "inactive") }
+  scope :filter_by_status, ->(status) { where(status: status) }
 end

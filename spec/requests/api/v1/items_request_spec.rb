@@ -2,6 +2,7 @@ require "rails_helper"
 
 describe "Item endpoints", :type => :request do
   let(:merchant) { Merchant.create!(name: "We got dogs") }
+  let(:item) { create(:item, merchant: merchant) } 
 
   describe "GET all items" do
     it "should return a list of items" do
@@ -128,6 +129,27 @@ describe "Item endpoints", :type => :request do
       expect(response).to have_http_status(:ok)
       expect(json[:data][:attributes][:name]).to eq(item_name)
     end
+
+    it "should update item with a new merchant" do
+      new_merchant = Merchant.create!(name: "No dogs")
+      patch "/api/v1/items/#{item.id}", params: { item: { merchant_id: new_merchant.id } }
+      json = JSON.parse(response.body, symbolize_names: true)
+    
+      expect(response).to have_http_status(:ok)
+      expect(json[:data][:attributes][:merchant_id]).to eq(new_merchant.id)
+    end
+
+    it "should return an error when updating with an invalid merchant_id" do
+      body = {
+        merchant_id: 12345678911
+      }
+      patch "/api/v1/items/#{item.id}", params: body, as: :json
+      json = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to have_http_status(:not_found)
+      expect(json[:errors]).to eq(["Couldn't find Merchant with 'id'=12345678911"])
+    end
+    
 
     it "should return 404 when id provided is not valid" do
       body = {

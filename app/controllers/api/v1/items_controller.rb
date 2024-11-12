@@ -26,7 +26,6 @@ class Api::V1::ItemsController < ApplicationController
       render json: ErrorSerializer.format_errors(["Invalid merchant"]), status: :not_found if merchant.nil?
     end
     item.update(item_params)
-    item.save
 
     render json: ItemSerializer.new(item), status: :ok
   end
@@ -39,6 +38,6 @@ class Api::V1::ItemsController < ApplicationController
   private
 
   def item_params
-    params.permit(:name, :description, :unit_price, :merchant_id)
+    params.require(:item).permit(:name, :description, :unit_price, :merchant_id)
   end
 end
