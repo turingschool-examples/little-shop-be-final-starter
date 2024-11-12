@@ -24,6 +24,18 @@ class Api::V1::Merchants::CouponsController < ApplicationController
     end
   end
 
+  def update
+    coupon = Coupon.find(params[:id])
+    merchant = coupon.merchant
+    new_status = params[:active] == 'true'
+    if coupon.update_status(new_status)
+      render json: CouponSerializer.new(coupon), status: :ok
+    else
+      render json: { errors: coupon.errors.full_messages }, status: :bad_request
+    end
+
+  end
+
 
   private
 

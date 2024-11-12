@@ -8,7 +8,7 @@ RSpec.describe "Coupons API", type: :request do
     @coupon3 = @merchant.coupons.create!(name: "Discount C", code: "SAVE30", value: 30, active: true)
     @coupon4 = @merchant.coupons.create!(name: "Discount D", code: "SAVE40", value: 40, active: true)
     @coupon5 = @merchant.coupons.create!(name: "Discount E", code: "SAVE50", value: 50, active: true)
-    @coupon5 = @merchant.coupons.create!(name: "Discount F", code: "SAVE60", value: 60, active: true)
+    @coupon6 = @merchant.coupons.create!(name: "Discount F", code: "SAVE60", value: 60, active: true)
   end
   
   describe "coupon index" do
@@ -142,6 +142,53 @@ RSpec.describe "Coupons API", type: :request do
       expect(json[:errors]).to eq(["Code has already been taken"])
     end
   end
+
+  describe "coupon deactivate" do
+    it "can deactivate an active coupon" do
+      patch "/api/v1/merchants/#{@merchant.id}/coupons/#{@coupon1.id}", params: {active: false}
+
+      expect(response).to be_successful
+      expect(response.status).to eq(200)
+  
+      json = JSON.parse(response.body, symbolize_names: true)
+      expect(json[:data][:attributes][:active]).to eq(false)
+    end
+
+    it "returns an error if there are pending invoices" do
+      customer = Customer.create!(first_name: "Bob", last_name: "Lobla")
+      invoice = @merchant.invoices.create!(customer_id: customer.id, status: "packaged", coupon_id: @coupon1.id)
+      
+      patch "/api/v1/merchants/#{@merchant.id}/coupons/#{@coupon1.id}", params: {active: false}
+
+      expect(response.status).to eq(400)
+      json = JSON.parse(response.body, symbolize_names: true)
+      expect(json[:errors]).to include("Coupon cannot be deactivated due to pending invoices")
+    end
+  end
+  describe "coupon activate" do
+    it "can activate a coupon" do
+      @coupon1.update!(active: false)
+      
+      patch "/api/v1/merchants/#{@merchant.id}/coupons/#{@coupon2.id}", params: {active: true}
+      
+      expect(response).to be_successful
+      expect(response.status).to eq(200)
+      
+      json = JSON.parse(response.body, symbolize_names: true)
+      expect(json[:data][:attributes][:active]).to eq(true)
+    end
+    
+    it "returns an error if there are already 5 active coupons" do
+      @coupon2.update!(active: false)  
+      
+      patch "/api/v1/merchants/#{@merchant.id}/coupons/#{@coupon2.id}", params: {active: true}
+      
+      expect(response.status).to eq(400)
+      json = JSON.parse(response.body, symbolize_names: true)
+      expect(json[:errors]).to include("Merchant already has 5 active coupons")
+    end
+  end
 end
+
 
   
