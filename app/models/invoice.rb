@@ -1,6 +1,8 @@
 class Invoice < ApplicationRecord
   belongs_to :customer
   belongs_to :merchant
+  belongs_to :coupon, optional: true
+  validates :coupon_id, numericality: { only_integer: true, allow_nil: true }
   has_many :invoice_items, dependent: :destroy
   has_many :transactions, dependent: :destroy
 
