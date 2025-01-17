@@ -2,6 +2,7 @@ require "rails_helper"
 
 describe "Item endpoints", :type => :request do
   let(:merchant) { Merchant.create!(name: "We got dogs") }
+  let(:invalid_item_id) { 9999 }  # an ID that doesn't exist
 
   describe "GET all items" do
     it "should return a list of items" do
@@ -83,7 +84,7 @@ describe "Item endpoints", :type => :request do
       expect(json[:data][:attributes][:unit_price]).to eq(price)
     end
 
-    it "should display an error messageif not all fields are present" do
+    it "should display an error message if not all fields are present" do
       body = {
         name: "name",
         description: "desc",
@@ -115,7 +116,7 @@ describe "Item endpoints", :type => :request do
     end
   end
 
-  describe "Update item" do
+  describe "Update Item" do
     it "should properly update an existing item" do
       item = create(:item, merchant: merchant)
       item_name = "stamps"
@@ -158,5 +159,6 @@ describe "Item endpoints", :type => :request do
       expect(json[:errors].first).to eq("Couldn't find Item with 'id'=678")
     end
   end
+
 end
 
