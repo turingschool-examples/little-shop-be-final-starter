@@ -4,11 +4,17 @@ class Coupon < ApplicationRecord
   
     validates :name, presence: true
     validates :code, presence: true, uniqueness: true
-    validates :percent_off, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }, allow_nil: true
-    validates :dollar_off, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
-
-    def used_count
-      coupon_uses.count
-    end
+    validate :percent_off_or_dollar_off
+  
+  def used_count
+    coupon_uses.count
   end
   
+  private
+    def percent_off_or_dollar_off
+      unless percent_off.present? ^ dollar_off.present?
+        errors.add(:base, "You must provide either percent_off or dollar_off.")
+      end
+    end
+end
+

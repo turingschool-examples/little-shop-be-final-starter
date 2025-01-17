@@ -7,25 +7,27 @@ RSpec.describe "Merchant Coupon endpoints" do
     @coupon1 = create(:coupon, merchant: @merchant1)
     
     @merchant2 = create(:merchant)
-    @coupon2 = create(:coupon, merchant: @merchant2, code: "10PER", percent_off: 10)
-    @coupon3 = create(:coupon, merchant: @merchant2,code: "5OFF", dollar_off: 5)
+    @coupon2 = create(:coupon, merchant: @merchant2)
+    @coupon3 = create(:coupon, merchant: @merchant2)
   end
 
-  it "should return all of a merchant's coupons" do
-    get "/api/v1/merchants/#{@merchant1.id}/coupons"
+  describe "Merchant Coupons Index" do 
+    it "should return all of a merchant's coupons" do
+      get "/api/v1/merchants/#{@merchant1.id}/coupons"
 
-    coupons = JSON.parse(response.body, symbolize_names: true)
+      coupons = JSON.parse(response.body, symbolize_names: true)
 
-    expect(response).to be_successful
+      expect(response).to be_successful
 
-    expect(coupons[:data].count).to eq(1)
-    expect(coupons[:data][0][:id]).to eq(@coupon1.id.to_s)
-    expect(coupons[:data][0][:type]).to eq("coupon")
-    expect(coupons[:data][0][:attributes][:name]).to eq(@coupon1.name)
-    expect(coupons[:data][0][:attributes][:code]).to eq(@coupon1.code)
-    expect(coupons[:data][0][:attributes][:percent_off]).to eq(@coupon1.percent_off.to_s)
-    expect(coupons[:data][0][:attributes][:dollar_off]).to eq(@coupon1.dollar_off)
-    expect(coupons[:data][0][:attributes][:used_count]).to eq(@coupon1.used_count)
+      expect(coupons[:data].count).to eq(1)
+      expect(coupons[:data][0][:id]).to eq(@coupon1.id.to_s)
+      expect(coupons[:data][0][:type]).to eq("coupon")
+      expect(coupons[:data][0][:attributes][:name]).to eq(@coupon1.name)
+      expect(coupons[:data][0][:attributes][:code]).to eq(@coupon1.code)
+      expect(coupons[:data][0][:attributes][:percent_off]).to eq(@coupon1.percent_off.to_s)
+      expect(coupons[:data][0][:attributes][:dollar_off]).to eq(@coupon1.dollar_off)
+      expect(coupons[:data][0][:attributes][:used_count]).to eq(@coupon1.used_count)
+    end
   end
 
   describe 'Merchant Coupon Show' do
@@ -52,4 +54,23 @@ RSpec.describe "Merchant Coupon endpoints" do
       expect(response.status).to eq(404)
     end
   end
+
+  describe "Merchant Coupon Create" do
+    it "creates a new coupon for a merchant" do
+      new_coupon_params = { name: "Employee discount", code: "EMPL25", percent_off: 25}
+      headers = { "CONTENT_TYPE" => "application/json" }
+      # We include this header to make sure that these params are passed as JSON rather than as plain text
+
+      post "/api/v1/merchants/#{@merchant1.id}/coupons/", headers: headers, params: JSON.generate(coupon: new_coupon_params)
+
+      expect(response).to be_successful
+
+      created_coupon = Coupon.last
+
+      expect(created_coupon.name).to eq(new_coupon_params[:name])
+      expect(created_coupon.code).to eq(new_coupon_params[:code])
+      expect(created_coupon.percent_off).to eq(new_coupon_params[:percent_off])
+    end
+  end
+
 end
