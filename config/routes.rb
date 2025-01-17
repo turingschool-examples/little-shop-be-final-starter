@@ -27,4 +27,6 @@ Rails.application.routes.draw do
       end
     end
   end
+
+  get "/api/v1/coupons/:id", to: "api/v1/coupons#show"
 end

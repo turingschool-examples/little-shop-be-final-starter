@@ -7,4 +7,8 @@ class Coupon < ApplicationRecord
   validates :merchant_id, presence: true, numericality: { only_integer: true }
   belongs_to :merchant
   has_many :invoices
+
+  def self.invoice_coupon_count(coupon)
+    Invoice.where(coupon_id: coupon.id).count
+  end
 end
