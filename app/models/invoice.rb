@@ -8,5 +8,5 @@ class Invoice < ApplicationRecord
   validates :customer_id, presence: true
   validates :merchant_id, presence: true
   validates :status, inclusion: { in: ["shipped", "packaged", "returned"] }, presence: true
-  validates :coupon_id, allow_nil: true
+  validates :coupon_id, allow_nil: true, presence: true
 end

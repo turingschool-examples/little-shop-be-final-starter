@@ -5,7 +5,7 @@ class Item < ApplicationRecord
 
   validates :name, presence: true
   validates :description, presence: true
-  validates :unit_price, numericality: {greater_than_or_equal_to: 0}, presence: true
+  validates :unit_price, presence: true, numericality: {greater_than_or_equal_to: 0}
   validates :merchant_id, presence: true
   
   def self.sort_by_price
