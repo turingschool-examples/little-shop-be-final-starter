@@ -1,11 +1,13 @@
 class Item < ApplicationRecord
-  validates :name, presence: true
-  validates :description, presence: true
-  validates :unit_price, presence: true, numericality: true
   belongs_to :merchant
   has_many :invoice_items, dependent: :destroy
   # has_many :invoices, through: :invoice_items
 
+  validates :name, presence: true
+  validates :description, presence: true
+  validates :unit_price, presence: true, numericality: {greater_than_or_equal_to: 0}
+  validates :merchant_id, presence: true
+  
   def self.sort_by_price
     self.order(unit_price: :asc)
   end
