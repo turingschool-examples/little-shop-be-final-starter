@@ -1,12 +1,8 @@
 class Api::V1::CouponsController < ApplicationController
   def show
     coupon = Coupon.find(params[:id])
-    render json: CouponSerializer.new(coupon), status: :ok
-  end
-
-  private
-
-  def item_params
-    params.permit(:name, :code, :dollar_off, :percent_off, :status, :merchant_id)
+    meta_data = {}
+    meta_data[:meta] = { usage_count: Coupon.invoice_coupon_count(coupon) }
+    render json: CouponSerializer.new(coupon, meta_data), status: :ok
   end
 end
