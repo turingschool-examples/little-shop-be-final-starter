@@ -1,4 +1,4 @@
 class CouponSerializer
     include JSONAPI::Serializer
-    attributes :name, :ccode, :percent_off, :dollar_off
+    attributes :name, :code, :percent_off, :dollar_off, :merchant_id, :status
 end
