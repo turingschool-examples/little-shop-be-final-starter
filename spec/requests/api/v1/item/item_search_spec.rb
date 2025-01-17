@@ -24,6 +24,15 @@ RSpec.describe "Item Search Endpoints" do
         json = JSON.parse(response.body, symbolize_names: true)
         expect(json[:data][:attributes][:name]).to eq("apple")
       end
+
+      it "should return an empty object if item is not present" do
+        item1 = merchant.items.create({name: "brush", description: "good stuff", unit_price: 13.50})
+        item2 = merchant.items.create({name: "No more rush Watch", description: "You will never rush again", unit_price: 25.50})
+
+        get api_v1_items_find_index_path, params: {name: "dog"}
+        json = JSON.parse(response.body, symbolize_names: true)
+        expect(json[:data]).to eq({ })
+      end
     end
 
     describe "sad path" do
