@@ -11,7 +11,7 @@ RSpec.describe "Merchant Coupon endpoints" do
     @coupon3 = create(:coupon, merchant: @merchant2)
   end
 
-  describe "Merchant Coupons Index" do 
+  describe "#INDEX" do 
     it "should return all of a merchant's coupons" do
       get "/api/v1/merchants/#{@merchant1.id}/coupons"
 
@@ -30,7 +30,7 @@ RSpec.describe "Merchant Coupon endpoints" do
     end
   end
 
-  describe 'Merchant Coupon Show' do
+  describe "#SHOW" do
     it 'returns a specific coupon with a count of how many times coupon has been used' do
       get "/api/v1/merchants/#{@merchant1.id}/coupons/#{@coupon1.id}"
 
@@ -55,7 +55,7 @@ RSpec.describe "Merchant Coupon endpoints" do
     end
   end
 
-  describe "Merchant Coupon Create" do
+  describe "#CREATE" do
     it "creates a new coupon for a merchant" do
       new_coupon_params = { name: "Employee discount", code: "EMPL25", percent_off: 25}
       headers = { "CONTENT_TYPE" => "application/json" }
