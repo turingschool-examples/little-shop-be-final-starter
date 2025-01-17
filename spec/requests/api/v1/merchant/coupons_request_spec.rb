@@ -23,7 +23,7 @@ RSpec.describe "Merchant Coupon endpoints" do
     expect(json[:data][0][:type]).to eq("coupon")
     expect(json[:data][0][:attributes][:name]).to eq(@coupon1.name)
     expect(json[:data][0][:attributes][:code]).to eq(@coupon1.code)
-    expect(json[:data][0][:attributes][:percent_off]).to eq(@coupon1.percent_off)
+    expect(json[:data][0][:attributes][:percent_off]).to eq(@coupon1.percent_off.to_s)
     expect(json[:data][0][:attributes][:dollar_off]).to eq(@coupon1.dollar_off)
   end
 
