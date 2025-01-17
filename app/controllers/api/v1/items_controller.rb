@@ -22,6 +22,8 @@ class Api::V1::ItemsController < ApplicationController
   def update
     item = Item.find(params[:id])
     if !item_params[:merchant_id].nil?
+      # SimpleCov is showing this isn't being covered. 
+      # Is this a mistake? Shouldn't it be only for updating items? Why is Merchant in here?
       merchant = Merchant.find(item_params[:merchant_id])
       render json: ErrorSerializer.format_errors(["Invalid merchant"]), status: :not_found if merchant.nil?
     end
