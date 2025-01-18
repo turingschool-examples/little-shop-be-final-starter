@@ -3,6 +3,8 @@ require "rails_helper"
 describe "Item endpoints", :type => :request do
   let(:merchant) { Merchant.create!(name: "We got dogs") }
   let(:invalid_item_id) { 9999 }  # an ID that doesn't exist
+  let(:item) { create(:item, merchant: merchant) }
+  let(:new_merchant) { create(:merchant) }
 
   describe "GET all items" do
     it "should return a list of items" do
@@ -130,7 +132,7 @@ describe "Item endpoints", :type => :request do
       expect(json[:data][:attributes][:name]).to eq(item_name)
     end
 
-    it "should return 404 when id provided is not valid" do
+    it "should return 404 when item_id provided is not valid" do
       body = {
         name: "new name"
       }
@@ -141,6 +143,26 @@ describe "Item endpoints", :type => :request do
       expect(response).to have_http_status(:not_found)
       expect(json[:errors].first).to eq("Couldn't find Item with 'id'=235")
     end
+
+    context 'when updating with a valid merchant_id' do
+      it 'updates the item and returns the item with a status of 200' do
+        patch api_v1_item_path(item), params: { name: "Updated Item", merchant_id: new_merchant.id }
+        
+        expect(response).to have_http_status(:ok)
+        updated_item = JSON.parse(response.body)["data"]
+        expect(updated_item["attributes"]["name"]).to eq("Updated Item")
+      end
+    end
+
+    context 'when updating with an invalid merchant_id' do
+      it 'returns a 404 with an error message' do
+        patch api_v1_item_path(item), params: { name: "Updated Item", merchant_id: 99999 } # invalid ID
+        
+        expect(response).to have_http_status(:not_found)
+        expect(JSON.parse(response.body)["errors"]).to include("Invalid merchant")
+      end
+    end
+
   end
 
   describe "Delete Item" do

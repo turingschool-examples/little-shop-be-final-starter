@@ -2,7 +2,7 @@ class Api::V1::Items::SearchController < ApplicationController
   before_action :validate_params
 
   def show
-    return handle_item_name_search(params) if params[:name].present?
+    return handle_item_show_search(params) if params[:name].present?
 
     min = params[:min_price] if params[:min_price]
     max = params[:max_price] if params[:max_price]
@@ -20,7 +20,7 @@ class Api::V1::Items::SearchController < ApplicationController
   end
 
   def index
-    return handle_item_name_search(params) if params[:name].present?
+    return handle_item_index_search(params) if params[:name].present?
       
     min = params[:min_price].to_f if params[:min_price]
     max = params[:max_price].to_f if params[:max_price]
@@ -35,21 +35,23 @@ class Api::V1::Items::SearchController < ApplicationController
 
   private
 
-  def handle_item_name_search(params)
-    if params[:action] == "show"
-      search_response = Item.find_one_item_by_name(params[:name])
-      return render json: { data: { } } if search_response.nil?
-    elsif params[:action] == "index"
-      search_response = Item.find_all_by_name(params[:name])
-    end
+  def handle_item_show_search(params)
+    search_response = Item.find_one_item_by_name(params[:name])
+    render json: { data: { } } and return if search_response.nil?
     render json: ItemSerializer.new(search_response), status: :ok
   end
+  
+  def handle_item_index_search(params)
+    search_response = Item.find_all_by_name(params[:name])
+    render json: ItemSerializer.new(search_response), status: :ok
+  end
+  
 
   def validate_params
     return render_error if price_params_negative?(params)
     return render_error if no_search_params?(params)
     return render_error if name_and_price_params_included?(params)
-    render_error if invalid_min_or_max?(params)
+    return render_error if invalid_min_or_max?(params)
   end
 
   def name_and_price_params_included?(params)
