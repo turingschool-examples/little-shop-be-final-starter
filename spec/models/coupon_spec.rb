@@ -12,7 +12,7 @@ RSpec.describe Coupon do
         merchant_id: test_merchant.id
       )
       expect(test_coupon.merchant).to eq(test_merchant)
-      # expect(test_merchant.coupons).to include(test_coupon) 
+      expect(test_merchant.coupons).to include(test_coupon) 
     end
   end
     # it { should belong_to :merchant }
