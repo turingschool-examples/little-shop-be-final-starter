@@ -39,29 +39,29 @@ RSpec.describe "Item Search Endpoints" do
       it "should return an error if there are no search params" do
         get api_v1_items_find_index_path
         json = JSON.parse(response.body, symbolize_names: true)
-        expect(json[:errors][0]).to eq("invalid search params")
+        expect(json[:errors][0]).to eq("Invalid search parameters provided")
       end
 
       it "should return an error if name and price params are present" do
         get api_v1_items_find_index_path, params: { name: "ring", max_price: 3}
         json = JSON.parse(response.body, symbolize_names: true)
-        expect(json[:errors][0]).to eq("invalid search params")
+        expect(json[:errors][0]).to eq("Invalid search parameters provided")
 
         get api_v1_items_find_index_path, params: { name: "ring", min_price: 0, max_price: 3}
         json = JSON.parse(response.body, symbolize_names: true)
-        expect(json[:errors][0]).to eq("invalid search params")
+        expect(json[:errors][0]).to eq("Invalid search parameters provided")
       end
 
       it "should return an error if price params are negative" do
         get api_v1_items_find_index_path, params: { max_price: -3}
         json = JSON.parse(response.body, symbolize_names: true)
-        expect(json[:errors][0]).to eq("invalid search params")
+        expect(json[:errors][0]).to eq("Invalid search parameters provided")
       end
 
       it "should return an error if any params are empty strings" do
         get api_v1_items_find_index_path, params: { name: "" }
         json = JSON.parse(response.body, symbolize_names: true)
-        expect(json[:errors][0]).to eq("invalid search params")
+        expect(json[:errors][0]).to eq("Invalid search parameters provided")
       end
     end
   end
