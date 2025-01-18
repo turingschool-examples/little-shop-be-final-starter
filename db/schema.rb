@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_01_18_013750) do
+ActiveRecord::Schema[7.1].define(version: 2025_01_18_174913) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -51,6 +51,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_01_18_013750) do
     t.string "status"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
+    t.bigint "coupon_id"
+    t.index ["coupon_id"], name: "index_invoices_on_coupon_id"
     t.index ["customer_id"], name: "index_invoices_on_customer_id"
     t.index ["merchant_id"], name: "index_invoices_on_merchant_id"
   end
@@ -84,6 +86,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_01_18_013750) do
   add_foreign_key "coupons", "merchants"
   add_foreign_key "invoice_items", "invoices"
   add_foreign_key "invoice_items", "items"
+  add_foreign_key "invoices", "coupons"
   add_foreign_key "invoices", "customers"
   add_foreign_key "invoices", "merchants"
   add_foreign_key "items", "merchants"

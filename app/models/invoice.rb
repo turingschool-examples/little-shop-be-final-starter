@@ -6,4 +6,12 @@ class Invoice < ApplicationRecord
   has_many :transactions, dependent: :destroy
 
   validates :status, inclusion: { in: ["shipped", "packaged", "returned"] }
+  # validate :coupon_must_be_active
 end
+
+# def coupon_must_be_active
+#   if coupon && !coupon.active?
+#     error.add(:coupon, "must be active.")
+#   end
+# end
+  
