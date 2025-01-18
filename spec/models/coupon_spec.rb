@@ -59,5 +59,13 @@ RSpec.describe Coupon, type: :model do
   end
 
   describe 'instance methods' do
+    it '#used_count tracks the number of coupon uses for each coupon' do
+    end
+
+    it '#activate! can activate a coupon' do 
+    end
+
+    it '#deactivate! can deactivate a coupon' do
+    end
   end
 end
