@@ -5,6 +5,11 @@ require 'rails_helper'
 RSpec.describe Coupon, type: :model do
   let(:merchant) { create(:merchant) }
 
+  describe 'relationships' do
+    it { should belong_to :merchant } 
+    it { should have_many :coupon_uses } 
+  end
+
   describe 'validations' do
     context 'when neither percent_off nor dollar_off is provided' do
       it 'provides an error message' do
@@ -51,5 +56,8 @@ RSpec.describe Coupon, type: :model do
         expect(coupon).to be_valid
       end
     end
+  end
+
+  describe 'instance methods' do
   end
 end
