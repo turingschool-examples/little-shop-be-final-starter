@@ -13,13 +13,12 @@ class Api::V1::Merchants::CouponsController < ApplicationController
 
   def show
     coupon = @merchant.coupons.find(params[:id])
+    render json: CouponSerializer.new(coupon), status: :ok
 
-    if coupon
-      render json: CouponSerializer.new(coupon), status: :ok
-    else
-      render json: ErrorSerializer.format_errors(["Coupon not found"]), status: :not_found
-    end
+  rescue ActiveRecord::RecordNotFound
+    render json: ErrorSerializer.format_invalid_search_response, status: :not_found
   end
+
 
   def create
     coupon = @merchant.coupons.new(coupon_params)
@@ -30,7 +29,7 @@ class Api::V1::Merchants::CouponsController < ApplicationController
         coupon: CouponSerializer.new(coupon)
       }, status: :created
     else
-      render json: ErrorSerializer.format_errors(["Coupon not created"]), status: :unprocessable_entity
+      render json: ErrorSerializer.format_validation_errors(coupon), status: :unprocessable_entity
     end
   end
 

@@ -9,6 +9,8 @@ RSpec.describe "Merchant Coupon endpoints" do
     @merchant2 = create(:merchant)
     @coupon2 = create(:coupon, merchant: @merchant2)
     @coupon3 = create(:coupon, merchant: @merchant2)
+
+    @merchant3 = create(:merchant)
   end
 
   describe "#INDEX" do 
@@ -27,6 +29,21 @@ RSpec.describe "Merchant Coupon endpoints" do
       expect(coupons[:data][0][:attributes][:percent_off]).to eq(@coupon1.percent_off.to_s)
       expect(coupons[:data][0][:attributes][:dollar_off]).to eq(@coupon1.dollar_off)
       expect(coupons[:data][0][:attributes][:used_count]).to eq(@coupon1.used_count)
+    end
+
+    it "returns a not found status when there are no coupons for the merchant" do
+      get "/api/v1/merchants/#{@merchant3.id}/coupons"
+
+      coupons = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to have_http_status(:not_found)
+
+      expected_error = {
+        "errors" => ["No coupons found for this merchant"],
+        "message" => "Your query could not be completed"
+      }
+      
+      expect(JSON.parse(response.body)).to eq(expected_error)
     end
   end
 
@@ -52,6 +69,13 @@ RSpec.describe "Merchant Coupon endpoints" do
       get "/api/v1/merchants/#{@merchant1.id}/coupons/999999999"
 
       expect(response.status).to eq(404)
+
+      expected_error = {
+        "errors"=>["Invalid search parameters provided"], 
+        "message"=>"Coupon not found"
+      }
+      
+      expect(JSON.parse(response.body)).to eq(expected_error)
     end
   end
 
@@ -71,6 +95,23 @@ RSpec.describe "Merchant Coupon endpoints" do
       expect(created_coupon.code).to eq(new_coupon_params[:code])
       expect(created_coupon.percent_off).to eq(new_coupon_params[:percent_off])
     end
+
+    it 'displays error when coupon created does not provide required params' do
+      new_coupon_params = { coupon: { name: '', code: '', percent_off: nil, dollar_off: nil } }
+      headers = { "CONTENT_TYPE" => "application/json" }
+
+      post "/api/v1/merchants/#{@merchant1.id}/coupons/", headers: headers, params: JSON.generate(coupon: new_coupon_params)
+
+      expect(response.status).to eq(422)
+
+      expected_error = {
+        "message" => "Coupon could not be created",
+        "errors" => ["Name can't be blank", "Code can't be blank", "You must provide either percent_off or dollar_off."],      }
+
+      expect(JSON.parse(response.body)).to eq(expected_error)
+    end
+
+
   end
 
 end
