@@ -5,12 +5,20 @@ class Coupon < ApplicationRecord
     validates :name, presence: true
     validates :code, presence: true, uniqueness: true
     validate :percent_off_or_dollar_off
-    validates :status, includion: { in: ['active', 'inactive'] }
+    validates :status, inclusion: { in: ['active', 'inactive'] }
   
   def used_count
     coupon_uses.count
   end
-  
+
+  def activate!
+    update(status: 'active')
+  end
+
+  def deactivate!
+    update(status: 'inactive')
+  end
+    
   private
     def percent_off_or_dollar_off
       unless percent_off.present? ^ dollar_off.present?
