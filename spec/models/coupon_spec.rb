@@ -11,7 +11,7 @@ require "rails_helper"
     
 #   end
 
-#   describe 'instance methods' do
+#   describe 'custom instance methods' do
 #     it ...
     
 #   end
