@@ -59,7 +59,18 @@ RSpec.describe Coupon, type: :model do
   end
 
   describe 'instance methods' do
+    before do
+      @merchant = create(:merchant)
+      @coupon1 = create(:coupon, merchant: @merchant)
+      @customer1 = create(:customer)
+    end
+  
     it '#used_count tracks the number of coupon uses for each coupon' do
+      expect(@coupon1.used_count).to eq(0)
+
+      create_list(:coupon_use, 3, coupon: @coupon1, customer: @customer1)
+
+      expect(@coupon1.used_count).to eq(3)
     end
 
     it '#activate! can activate a coupon' do 
