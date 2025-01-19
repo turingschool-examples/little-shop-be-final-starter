@@ -5,7 +5,7 @@
     merchant
 
     trait :with_coupon do
-      association :coupon
+      association :coupon, active: true
     end
   end
 end

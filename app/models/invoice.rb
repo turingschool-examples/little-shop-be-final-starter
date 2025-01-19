@@ -12,7 +12,6 @@ end
 private
 
 def coupon_must_be_active
-  binding.pry
   if coupon && !coupon.active?
     errors.add(:coupon, "must be active.")
   end
