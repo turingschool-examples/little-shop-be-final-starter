@@ -3,11 +3,12 @@ class Api::V1::Merchants::CouponsController < ApplicationController
   
   def index
     coupons = @merchant.coupons
+    valid_statuses = ["active", "inactive"] 
 
-    if params[:status].present?
-      coupons = coupons.where(status: params[:status])
+    if params[:status].present? && !valid_statuses.include?(params[:status])
+      render json: ErrorSerializer.format_errors(["Invalid coupon status"]), status: :bad_request
     end
-
+    
     if coupons.empty?
       render json: ErrorSerializer.format_errors(["No coupons found for this merchant"]), status: :not_found
     else
@@ -70,7 +71,7 @@ class Api::V1::Merchants::CouponsController < ApplicationController
   def set_merchant
     @merchant = Merchant.find_by(id: params[:merchant_id])
   rescue ActiveRecord::RecordNotFound
-    render json: ErrorSerializer.format_errors(["Merchant not found"])unless @merchant
+    render json: ErrorSerializer.format_errors(["Merchant not found"]), status: :not_found unless @merchant
   end
   
   def coupon_params
