@@ -28,41 +28,23 @@ RSpec.describe Coupon do
       expect(coupon2.errors[:code]).to include("has already been taken")
     end
 
-    xit "is valid when active is true" do
-      test_merchant = Merchant.create!(name: "Test Merchant")
-      test_coupon = Coupon.create!(
-        full_name: "My first test coupon.",
-        code: "Ten percent",
-        percent_off: 10,
-        active: true,
-        merchant_id: test_merchant.id
-      )
-      expect(test_coupon).to be_valid
+    it "is valid when active is true" do 
+      coupon = create(:coupon, merchant: merchant, active: true)
+       
+      expect(coupon).to be_valid
     end
     
-    xit "is valid when active is false" do
-      test_merchant = Merchant.create!(name: "Test Merchant")
-      test_coupon = Coupon.create!(
-        full_name: "My first test coupon.",
-        code: "Ten percent",
-        percent_off: 10,
-        active: false,
-        merchant_id: test_merchant.id
-      )
-      expect(test_coupon).to be_valid
+    it "is valid when active is false" do
+      coupon = create(:coupon, merchant: merchant, active: false)
+       
+      expect(coupon).to be_valid
     end
 
-    xit "is invalid when active is nil" do
-      test_merchant = Merchant.create!(name: "Test Merchant")
-      test_coupon = Coupon.new(
-        full_name: "My first test coupon.",
-        code: "Ten percent",
-        percent_off: 10,
-        active: nil,
-        merchant_id: test_merchant.id
-      )
-      expect(test_coupon).to_not be_valid
-      expect(test_coupon.errors[:active]).to include("is not included in the list")
+    it "is invalid when active is nil" do
+      coupon = build(:coupon, merchant: merchant, active: nil)
+       
+      expect(coupon).to_not be_valid
+      expect(coupon.errors[:active]).to include("is not included in the list")
     end
 
     xit "is valid when percent_off is not nill and dollar_off is nil" do
