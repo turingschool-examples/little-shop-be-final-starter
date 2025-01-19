@@ -33,9 +33,42 @@ class Api::V1::Merchants::CouponsController < ApplicationController
     end
   end
 
+  def activate
+    coupon = Coupon.find(params[:id])
+
+    coupon.activate!
+      render json: {
+        message: "Coupon activated successfully!",
+        status: :ok
+    }
+    
+  rescue ActiveRecord::RecordNotFound
+    render json: ErrorSerializer.format_invalid_search_response, status: :not_found
+  end
+  
+
+  def deactivate
+    coupon = Coupon.find(params[:id])
+
+    if coupon.deactivate!
+      render json: {
+        message: "Coupon deactivated.",
+        status: :ok
+      }
+    else
+      render json: {
+        error: "Unable to deactivate coupon",
+        status: :unprocessable_entity
+      }
+    end
+  end
+
+
+
   private
   def set_merchant
     @merchant = Merchant.find_by(id: params[:merchant_id])
+  rescue ActiveRecord::RecordNotFound
     render json: ErrorSerializer.format_errors(["Merchant not found"])unless @merchant
   end
   
