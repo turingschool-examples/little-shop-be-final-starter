@@ -46,6 +46,35 @@ RSpec.describe "Merchant Coupon endpoints" do
       
       expect(JSON.parse(response.body)).to eq(expected_error)
     end
+
+    context "when filtering by status" do
+      it "returns only active coupons when status=active" do
+        get api_v1_merchant_coupons_path(@merchant2.id, status: 'active')
+
+        expect(response).to be_successful
+        
+        json = JSON.parse(response.body)
+        
+        expect(json['data'].length).to eq(2)
+        expect(json['data'][0]['attributes']['status']).to eq('active')
+      end
+
+      it "returns only inactive coupons when status=inactive" do
+        coupon4 = create(:coupon, merchant: @merchant3, status: 'active')
+        coupon5 = create(:coupon, merchant: @merchant3, status: 'active')
+        coupon5 = create(:coupon, merchant: @merchant3, status: 'inactive')
+
+        get api_v1_merchant_coupons_path(@merchant3.id, status: 'inactive')
+        
+        expect(response).to be_successful
+        
+        json = JSON.parse(response.body)
+        
+        expect(json['data'].length).to eq(1)
+        expect(json['data'][0]['attributes']['status']).to eq('inactive')
+      end
+   
+    end
   end
 
   describe "#SHOW" do

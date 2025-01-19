@@ -4,6 +4,10 @@ class Api::V1::Merchants::CouponsController < ApplicationController
   def index
     coupons = @merchant.coupons
 
+    if params[:status].present?
+      coupons = coupons.where(status: params[:status])
+    end
+
     if coupons.empty?
       render json: ErrorSerializer.format_errors(["No coupons found for this merchant"]), status: :not_found
     else
