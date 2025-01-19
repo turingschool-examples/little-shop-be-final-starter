@@ -73,7 +73,15 @@ RSpec.describe "Merchant Coupon endpoints" do
         expect(json['data'].length).to eq(1)
         expect(json['data'][0]['attributes']['status']).to eq('inactive')
       end
-   
+
+      it "if an invalid status is provided it returns no coupons" do
+        get "/api/v1/merchants/#{@merchant1.id}/coupons?status=nonexistentstatus"
+        
+        json = JSON.parse(response.body, symbolize_names: true)
+
+        expect(response).to have_http_status(:not_found)
+        expect(json[:errors]).to include("No coupons found for this merchant")
+      end
     end
   end
 
