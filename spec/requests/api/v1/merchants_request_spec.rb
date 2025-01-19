@@ -1,17 +1,38 @@
 require "rails_helper"
 
-describe "Merchant endpoints", :type => :request do
+describe "Merchant endpoints", type: :request do
   describe "Get all merchants" do
-    it "should return a properly array of merchants" do
-      create_list(:merchant, 5)
+    it "should return a properly formatted array of merchants with coupons and invoices count" do
+      # update based on project spec examples
+      merchant1 = create(:merchant, name: "Mike's Awesome Store")
+      merchant2 = create(:merchant, name: "Store of Fate")
+      merchant3 = create(:merchant, name: "This is the limit of my creativity")
+
+      create_list(:coupon, 3, merchant: merchant1)
+      create_list(:coupon, 2, merchant: merchant2)
+      create(:coupon, merchant: merchant3)
+
+      create_list(:invoice, 2, merchant: merchant1, coupon: merchant1.coupons.first)
+      create_list(:invoice, 3, merchant: merchant3, coupon: merchant3.coupons.first)
+
       get "/api/v1/merchants"
       json = JSON.parse(response.body, symbolize_names: true)
 
       expect(response).to have_http_status(:ok)
       expect(json[:data]).to be_a Array
-      expect(json[:data].count).to eq(5)
-      expect(json[:data].first).to include(:id, :type, :attributes)
+      expect(json[:data].count).to eq(3) 
+
+      expect(json[:data][0][:attributes][:coupons_count]).to eq(3)
+      expect(json[:data][0][:attributes][:invoice_coupon_count]).to eq(2)
+
+      expect(json[:data][1][:attributes][:coupons_count]).to eq(2)
+      expect(json[:data][1][:attributes][:invoice_coupon_count]).to eq(0)
+
+      expect(json[:data][2][:attributes][:coupons_count]).to eq(1)
+      expect(json[:data][2][:attributes][:invoice_coupon_count]).to eq(3)
+
       expect(json[:data].first[:attributes]).to include(:name)
+      expect(json[:data].first[:attributes][:name]).to eq("Mike's Awesome Store")
     end
 
     it "should return a data key even when there are no merchants to return" do
