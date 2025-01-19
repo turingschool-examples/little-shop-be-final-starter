@@ -13,13 +13,12 @@ class Api::V1::Merchants::CouponsController < ApplicationController
 
   def show
     coupon = @merchant.coupons.find(params[:id])
+    render json: CouponSerializer.new(coupon), status: :ok
 
-    if coupon
-      render json: CouponSerializer.new(coupon), status: :ok
-    else
-      render json: ErrorSerializer.format_errors(["Coupon not found"]), status: :not_found
-    end
+  rescue ActiveRecord::RecordNotFound
+    render json: ErrorSerializer.format_invalid_search_response, status: :not_found
   end
+
 
   def create
     coupon = @merchant.coupons.new(coupon_params)
@@ -30,13 +29,43 @@ class Api::V1::Merchants::CouponsController < ApplicationController
         coupon: CouponSerializer.new(coupon)
       }, status: :created
     else
-      render json: ErrorSerializer.format_errors(["Coupon not created"]), status: :unprocessable_entity
+      render json: ErrorSerializer.format_validation_errors(coupon), status: :unprocessable_entity
     end
   end
+
+  def activate
+    coupon = Coupon.find_by(id: params[:id])
+  
+    if coupon.nil?
+      render json: { error: 'Coupon not found' }, status: :not_found
+    else
+      coupon.activate!
+      render json: {
+        message: "Coupon activated successfully!",
+        status: :ok
+      }
+    end
+  end
+
+  def deactivate
+    coupon = Coupon.find_by(id: params[:id])
+  
+    if coupon.nil?
+      render json: { error: 'Coupon not found' }, status: :not_found
+    else
+      coupon.deactivate!
+      render json: {
+        message: "Coupon deactivated successfully.",
+        status: :ok
+      }
+    end
+  end
+
 
   private
   def set_merchant
     @merchant = Merchant.find_by(id: params[:merchant_id])
+  rescue ActiveRecord::RecordNotFound
     render json: ErrorSerializer.format_errors(["Merchant not found"])unless @merchant
   end
   

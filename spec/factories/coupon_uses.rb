@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :coupon_use do
-    coupon { nil }
-    customer { nil }
+    coupon 
+    customer 
   end
 end

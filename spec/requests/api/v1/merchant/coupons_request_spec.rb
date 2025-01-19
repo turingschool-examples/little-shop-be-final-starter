@@ -9,6 +9,8 @@ RSpec.describe "Merchant Coupon endpoints" do
     @merchant2 = create(:merchant)
     @coupon2 = create(:coupon, merchant: @merchant2)
     @coupon3 = create(:coupon, merchant: @merchant2)
+
+    @merchant3 = create(:merchant)
   end
 
   describe "#INDEX" do 
@@ -27,6 +29,22 @@ RSpec.describe "Merchant Coupon endpoints" do
       expect(coupons[:data][0][:attributes][:percent_off]).to eq(@coupon1.percent_off.to_s)
       expect(coupons[:data][0][:attributes][:dollar_off]).to eq(@coupon1.dollar_off)
       expect(coupons[:data][0][:attributes][:used_count]).to eq(@coupon1.used_count)
+      expect(coupons[:data][0][:attributes][:status]).to eq(@coupon1.status)
+    end
+
+    it "returns a not found status when there are no coupons for the merchant" do
+      get "/api/v1/merchants/#{@merchant3.id}/coupons"
+
+      coupons = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to have_http_status(:not_found)
+
+      expected_error = {
+        "errors" => ["No coupons found for this merchant"],
+        "message" => "Your query could not be completed"
+      }
+      
+      expect(JSON.parse(response.body)).to eq(expected_error)
     end
   end
 
@@ -46,12 +64,20 @@ RSpec.describe "Merchant Coupon endpoints" do
       expect(coupons[:data][:attributes][:name]).to eq(@coupon1.name)
       expect(coupons[:data][:attributes]).to have_key(:used_count)
       expect(coupons[:data][:attributes][:used_count]).to eq(@coupon1.used_count)
+      expect(coupons[:data][:attributes][:status]).to eq(@coupon1.status)
     end
 
     it 'displays error when coupon does not exist' do
       get "/api/v1/merchants/#{@merchant1.id}/coupons/999999999"
 
       expect(response.status).to eq(404)
+
+      expected_error = {
+        "errors"=>["Invalid search parameters provided"], 
+        "message"=>"Coupon not found"
+      }
+      
+      expect(JSON.parse(response.body)).to eq(expected_error)
     end
   end
 
@@ -71,6 +97,76 @@ RSpec.describe "Merchant Coupon endpoints" do
       expect(created_coupon.code).to eq(new_coupon_params[:code])
       expect(created_coupon.percent_off).to eq(new_coupon_params[:percent_off])
     end
+
+    it 'displays error when coupon created does not provide required params' do
+      new_coupon_params = { coupon: { name: '', code: '', percent_off: nil, dollar_off: nil } }
+      headers = { "CONTENT_TYPE" => "application/json" }
+
+      post "/api/v1/merchants/#{@merchant1.id}/coupons/", headers: headers, params: JSON.generate(coupon: new_coupon_params)
+
+      expect(response.status).to eq(422)
+
+      expected_error = {
+        "message" => "Coupon could not be created",
+        "errors" => ["Name can't be blank", "Code can't be blank", "You must provide either percent_off or dollar_off."],      }
+
+      expect(JSON.parse(response.body)).to eq(expected_error)
+    end
+
+
   end
 
+  describe "#PATCH deactivate" do
+    context 'when the coupon exists' do
+      it "updates status to inactive" do
+        patch deactivate_api_v1_merchant_coupon_path(@merchant1, id: @coupon1.id)
+
+        expect(response).to be_successful
+        json = JSON.parse(response.body)
+
+        expect(json['message']).to eq("Coupon deactivated successfully.")
+
+        @coupon1.reload
+        expect(@coupon1.status).to eq("inactive")
+      end
+    end
+
+    context 'when coupon does not exist' do
+      it 'returns a not found error' do
+        patch deactivate_api_v1_merchant_coupon_path(@merchant1, id: 999999)
+        
+        expect(response).to have_http_status(:not_found)
+        json = JSON.parse(response.body)
+
+        expect(json['error']).to eq('Coupon not found')
+      end
+    end
+  end
+
+  describe "#PATCH activate" do
+    context 'when the coupon exists' do
+      it "updates status to active" do
+        patch activate_api_v1_merchant_coupon_path(@merchant1, id: @coupon1.id)
+
+        expect(response).to be_successful
+        json = JSON.parse(response.body)
+
+        expect(json['message']).to eq("Coupon activated successfully!")
+
+        @coupon1.reload
+        expect(@coupon1.status).to eq("active")
+      end
+    end
+
+    context 'when coupon does not exist' do
+      it 'returns a not found error' do
+        patch activate_api_v1_merchant_coupon_path(@merchant1, id: 999999)
+        
+        expect(response).to have_http_status(:not_found)
+        json = JSON.parse(response.body)
+
+        expect(json['error']).to eq('Coupon not found')
+      end
+    end
+  end
 end

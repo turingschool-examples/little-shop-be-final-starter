@@ -1,3 +1,4 @@
+# bundle exec rspec spec/models/merchant_spec.rb
 require 'rails_helper'
 
 describe Merchant, type: :model do
