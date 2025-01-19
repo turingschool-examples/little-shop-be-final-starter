@@ -20,24 +20,12 @@ RSpec.describe Coupon do
       expect(coupon.persisted?).to be true
     end
 
-    xit "is invalid if the code is not unique" do
-      test_merchant = Merchant.create!(name: "Test Merchant")
-      test_coupon = Coupon.create!(
-        full_name: "My first test coupon.",
-        code: "Ten percent",
-        percent_off: 10,
-        active: false,
-        merchant_id: test_merchant.id
-      )
-      test_coupon2 = Coupon.new(
-        full_name: "My second test coupon.",
-        code: "Ten percent",
-        percent_off: 10,
-        active: false,
-        merchant_id: test_merchant.id
-      )
-      expect(test_coupon2).to_not be_valid
-      expect(test_coupon2.errors[:code]).to include("has already been taken")
+    it "is invalid if the code is not unique" do
+      coupon1 = create(:coupon, merchant: merchant, code: "UNIQUECODE")
+      coupon2 = build(:coupon, merchant: merchant, code: "UNIQUECODE")
+
+      expect(coupon2).to_not be_valid
+      expect(coupon2.errors[:code]).to include("has already been taken")
     end
 
     xit "is valid when active is true" do
