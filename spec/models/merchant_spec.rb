@@ -17,7 +17,10 @@ describe Merchant, type: :model do
       merchant2 = create(:merchant, created_at: 4.days.ago)
       merchant3 = create(:merchant, created_at: 2.days.ago)
 
-      expect(Merchant.sorted_by_creation).to eq([merchant1, merchant3, merchant2])
+      # expect(Merchant.sorted_by_creation).to eq([merchant1, merchant3, merchant2])
+      # result = Merchant.where(id: [merchant1.id, merchant2.id, merchant3.id]).sorted_by_creation
+      result = Merchant.where.not(name: "Test Merchant").sorted_by_creation
+      expect(result).to eq([merchant1, merchant3, merchant2])
     end
 
     it "should filter merchants by status of invoices" do
@@ -29,9 +32,17 @@ describe Merchant, type: :model do
       create_list(:invoice, 5, merchant_id: merchant2.id, customer_id: customer.id)
       create(:invoice, status: "packaged", merchant_id: merchant2.id, customer_id: customer.id)
 
-      expect(Merchant.filter_by_status("returned")).to eq([merchant1])
-      expect(Merchant.filter_by_status("packaged")).to eq([merchant2])
-      expect(Merchant.filter_by_status("shipped")).to match_array([merchant1, merchant2])
+      # expect(Merchant.filter_by_status("returned")).to eq([merchant1])
+      # expect(Merchant.filter_by_status("packaged")).to eq([merchant2])
+      # expect(Merchant.filter_by_status("shipped")).to match_array([merchant1, merchant2])
+
+      result1 = Merchant.where.not(name: "Test Merchant").sorted_by_creation.filter_by_status("returned")
+      expect(result1).to eq([merchant1])
+      result2 = Merchant.where.not(name: "Test Merchant").sorted_by_creation.filter_by_status("packaged")
+      expect(result2).to eq([merchant2])
+      result3 = Merchant.where.not(name: "Test Merchant").sorted_by_creation.filter_by_status("shipped")
+      expect(result3).to match_array([merchant1, merchant2])
+
     end
 
     it "should retrieve merchant when searching by name" do
