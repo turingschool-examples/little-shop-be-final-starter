@@ -34,35 +34,32 @@ class Api::V1::Merchants::CouponsController < ApplicationController
   end
 
   def activate
-    coupon = Coupon.find(params[:id])
-
-    coupon.activate!
+    coupon = Coupon.find_by(id: params[:id])
+  
+    if coupon.nil?
+      render json: { error: 'Coupon not found' }, status: :not_found
+    else
+      coupon.activate!
       render json: {
         message: "Coupon activated successfully!",
         status: :ok
-    }
-    
-  rescue ActiveRecord::RecordNotFound
-    render json: ErrorSerializer.format_invalid_search_response, status: :not_found
-  end
-  
-
-  def deactivate
-    coupon = Coupon.find(params[:id])
-
-    if coupon.deactivate!
-      render json: {
-        message: "Coupon deactivated.",
-        status: :ok
-      }
-    else
-      render json: {
-        error: "Unable to deactivate coupon",
-        status: :unprocessable_entity
       }
     end
   end
 
+  def deactivate
+    coupon = Coupon.find_by(id: params[:id])
+  
+    if coupon.nil?
+      render json: { error: 'Coupon not found' }, status: :not_found
+    else
+      coupon.deactivate!
+      render json: {
+        message: "Coupon deactivated successfully.",
+        status: :ok
+      }
+    end
+  end
 
 
   private

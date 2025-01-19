@@ -64,6 +64,7 @@ RSpec.describe "Merchant Coupon endpoints" do
       expect(coupons[:data][:attributes][:name]).to eq(@coupon1.name)
       expect(coupons[:data][:attributes]).to have_key(:used_count)
       expect(coupons[:data][:attributes][:used_count]).to eq(@coupon1.used_count)
+      expect(coupons[:data][:attributes][:status]).to eq(@coupon1.status)
     end
 
     it 'displays error when coupon does not exist' do
@@ -115,4 +116,57 @@ RSpec.describe "Merchant Coupon endpoints" do
 
   end
 
+  describe "#PATCH deactivate" do
+    context 'when the coupon exists' do
+      it "updates status to inactive" do
+        patch deactivate_api_v1_merchant_coupon_path(@merchant1, id: @coupon1.id)
+
+        expect(response).to be_successful
+        json = JSON.parse(response.body)
+
+        expect(json['message']).to eq("Coupon deactivated successfully.")
+
+        @coupon1.reload
+        expect(@coupon1.status).to eq("inactive")
+      end
+    end
+
+    context 'when coupon does not exist' do
+      it 'returns a not found error' do
+        patch deactivate_api_v1_merchant_coupon_path(@merchant1, id: 999999)
+        
+        expect(response).to have_http_status(:not_found)
+        json = JSON.parse(response.body)
+
+        expect(json['error']).to eq('Coupon not found')
+      end
+    end
+  end
+
+  describe "#PATCH activate" do
+    context 'when the coupon exists' do
+      it "updates status to active" do
+        patch activate_api_v1_merchant_coupon_path(@merchant1, id: @coupon1.id)
+
+        expect(response).to be_successful
+        json = JSON.parse(response.body)
+
+        expect(json['message']).to eq("Coupon activated successfully!")
+
+        @coupon1.reload
+        expect(@coupon1.status).to eq("active")
+      end
+    end
+
+    context 'when coupon does not exist' do
+      it 'returns a not found error' do
+        patch activate_api_v1_merchant_coupon_path(@merchant1, id: 999999)
+        
+        expect(response).to have_http_status(:not_found)
+        json = JSON.parse(response.body)
+
+        expect(json['error']).to eq('Coupon not found')
+      end
+    end
+  end
 end
