@@ -29,6 +29,7 @@ RSpec.describe "Merchant Coupon endpoints" do
       expect(coupons[:data][0][:attributes][:percent_off]).to eq(@coupon1.percent_off.to_s)
       expect(coupons[:data][0][:attributes][:dollar_off]).to eq(@coupon1.dollar_off)
       expect(coupons[:data][0][:attributes][:used_count]).to eq(@coupon1.used_count)
+      expect(coupons[:data][0][:attributes][:status]).to eq(@coupon1.status)
     end
 
     it "returns a not found status when there are no coupons for the merchant" do
