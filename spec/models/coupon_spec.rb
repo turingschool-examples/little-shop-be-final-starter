@@ -8,6 +8,7 @@ RSpec.describe Coupon do
   describe 'validations' do
     it { should validate_presence_of :full_name }
     it { should validate_presence_of :code }
+    # it { should validate_presence_of :merchant_id }
   
     it "is valid when all attributes are present and valid" do
       test_merchant = Merchant.create!(name: "Test Merchant")
@@ -40,6 +41,43 @@ RSpec.describe Coupon do
       )
       expect(test_coupon2).to_not be_valid
       expect(test_coupon2.errors[:code]).to include("has already been taken")
+    end
+
+    it "is valid when active is true" do
+      test_merchant = Merchant.create!(name: "Test Merchant")
+      test_coupon = Coupon.create!(
+        full_name: "My first test coupon.",
+        code: "Ten percent",
+        percent_off: 10,
+        active: true,
+        merchant_id: test_merchant.id
+      )
+      expect(test_coupon).to be_valid
+    end
+    
+    it "is valid when active is false" do
+      test_merchant = Merchant.create!(name: "Test Merchant")
+      test_coupon = Coupon.create!(
+        full_name: "My first test coupon.",
+        code: "Ten percent",
+        percent_off: 10,
+        active: false,
+        merchant_id: test_merchant.id
+      )
+      expect(test_coupon).to be_valid
+    end
+
+    it "is invalid when active is nil" do
+      test_merchant = Merchant.create!(name: "Test Merchant")
+      test_coupon = Coupon.new(
+        full_name: "My first test coupon.",
+        code: "Ten percent",
+        percent_off: 10,
+        active: nil,
+        merchant_id: test_merchant.id
+      )
+      expect(test_coupon).to_not be_valid
+      expect(test_coupon.errors[:active]).to include("is not included in the list")
     end
   end  
 end
