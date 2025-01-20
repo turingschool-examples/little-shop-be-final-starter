@@ -35,6 +35,19 @@ RSpec.describe "Merchant Coupons API", type: :request do
       expect(json[:data][:attributes][:full_name]).to eq("Spring Sale")
       expect(json[:data][:attributes][:code]).to eq("SPRING10")
     end
+
+    it "should return an error if code has already been taken" do
+      merchant = create(:merchant)
+      coupon1 = create(:coupon, merchant: merchant, full_name: "A Spring Sale", code: "SPRING10")
+      coupon_attributes = attributes_for(:coupon, full_name: "Spring Sale", code: "SPRING10")
+
+      post "/api/v1/merchants/#{merchant.id}/coupons", params: { coupon: coupon_attributes }
+  
+      json = JSON.parse(response.body, symbolize_names: true)
+  
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json[:error]).to eq("Code has already been taken")
+    end
   end
   
   
@@ -56,7 +69,6 @@ RSpec.describe "Merchant Coupons API", type: :request do
       expect(json[:data][:attributes][:usage_count]).to eq(coupon.invoices.count)
     end
   
-
     it "returns a 404 error if the coupon does not exist for the given merchant" do
       merchant = create(:merchant)
         
@@ -76,20 +88,20 @@ RSpec.describe "Merchant Coupons API", type: :request do
       expect(json[:error]).to eq("Coupon not found")
     end
 
-    # it 'includes the correct usage_count' do
-    #   merchant = create(:merchant)
-    #   coupon = create(:coupon)
+    it 'includes the correct usage_count' do
+      merchant = create(:merchant)
+      coupon = create(:coupon)
+      customer = create(:customer)
   
-    #   create(:invoice, coupon: coupon, customer_name: 'John Doe', total: 100)
-    #   create(:invoice, coupon: coupon, customer_name: 'Jane Smith', total: 200)
-    #   create(:invoice, coupon: coupon, customer_name: 'Alice Johnson', total: 300)
+      invoice1 = create(:invoice, customer_id: customer.id, merchant_id: merchant.id, coupon_id: coupon.id, status: "packaged")
+      invoice2 = create(:invoice, customer_id: customer.id, merchant_id: merchant.id, coupon_id: coupon.id, status: "packaged")
   
-    #   serialized = CouponSerializer.new(coupon).serializable_hash
+      serialized = CouponSerializer.new(coupon).serializable_hash
   
-    #   attributes = serialized[:data][:attributes]
+      attributes = serialized[:data][:attributes]
   
-    #   expect(attributes[:usage_count]).to eq(3)
-    # end 
+      expect(attributes[:usage_count]).to eq(2)
+    end 
   end
   
 end

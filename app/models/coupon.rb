@@ -14,8 +14,8 @@ private
 
 def discount_type_constraints
   if !percent_off.present? && !dollar_off.present?
-    errors.add(:base, "one discount type (percent or dollar off) must be specified.")
+    errors.add(:discount_type_error, "one discount type (percent or dollar off) must be specified.")
   elsif percent_off.present? && dollar_off.present?
-    errors.add(:base, "only one discount type (percent or dollar off) can be specified at a time.")
+    errors.add(:discount_type_error, "only one discount type (percent or dollar off) can be specified at a time.")
   end
 end 

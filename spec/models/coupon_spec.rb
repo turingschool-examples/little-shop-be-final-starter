@@ -64,14 +64,14 @@ RSpec.describe Coupon do
       coupon = build(:coupon, merchant: merchant, active: true, percent_off: nil, dollar_off: nil)
   
       expect(coupon).to_not be_valid
-      expect(coupon.errors[:base]).to include("one discount type (percent or dollar off) must be specified.")
+      expect(coupon.errors[:discount_type_error,]).to include("one discount type (percent or dollar off) must be specified.")
     end
 
     it "is invalid when both dollar_off and percent_off have a value" do
       coupon = build(:coupon, merchant: merchant, active: true, percent_off: 10, dollar_off: 12)
   
       expect(coupon).to_not be_valid 
-      expect(coupon.errors[:base]).to include("only one discount type (percent or dollar off) can be specified at a time.")
+      expect(coupon.errors[:discount_type_error]).to include("only one discount type (percent or dollar off) can be specified at a time.")
     end
   end  
 end
