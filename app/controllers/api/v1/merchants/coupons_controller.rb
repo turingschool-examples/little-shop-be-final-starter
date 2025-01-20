@@ -4,7 +4,8 @@ class Api::V1::Merchants::CouponsController < ApplicationController
       merchant = Merchant.find(params[:merchant_id])
       coupon = merchant.coupons.find(params[:id])
 
-      # usage_count = coupon.invoices.count 
+      usage_count = coupon.invoices.count 
+
       render json: {
         data: {
           id: coupon.id,
@@ -15,8 +16,8 @@ class Api::V1::Merchants::CouponsController < ApplicationController
             percent_off: coupon.percent_off,
             dollar_off: coupon.dollar_off,
             active: coupon.active,
-            merchant_id: coupon.merchant_id
-            # usage_count: usage_count
+            merchant_id: coupon.merchant_id,
+            usage_count: usage_count
           }
         }
       }

@@ -16,6 +16,7 @@ RSpec.describe "Merchant Coupons API", type: :request do
       expect(json[:data][:attributes][:name]).to eq("Spring Sale")
       expect(json[:data][:attributes][:code]).to eq("SPRING10")
       expect(json[:data][:attributes][:merchant_id]).to eq(merchant.id)
+      expect(json[:data][:attributes][:usage_count]).to eq(coupon.invoices.count)
     end
   
 
@@ -25,7 +26,6 @@ RSpec.describe "Merchant Coupons API", type: :request do
       get "/api/v1/merchants/#{merchant.id}/coupons/99999"
 
       json = JSON.parse(response.body, symbolize_names: true)
-      puts json 
 
       expect(response).to have_http_status(:not_found)
       expect(json[:error]).to eq("Coupon not found")
@@ -38,6 +38,21 @@ RSpec.describe "Merchant Coupons API", type: :request do
       expect(response).to have_http_status(:not_found) 
       expect(json[:error]).to eq("Coupon not found")
     end
+
+    # it 'includes the correct usage_count' do
+    #   merchant = create(:merchant)
+    #   coupon = create(:coupon)
+  
+    #   create(:invoice, coupon: coupon, customer_name: 'John Doe', total: 100)
+    #   create(:invoice, coupon: coupon, customer_name: 'Jane Smith', total: 200)
+    #   create(:invoice, coupon: coupon, customer_name: 'Alice Johnson', total: 300)
+  
+    #   serialized = CouponSerializer.new(coupon).serializable_hash
+  
+    #   attributes = serialized[:data][:attributes]
+  
+    #   expect(attributes[:usage_count]).to eq(3)
+    # end 
   end
   
 end

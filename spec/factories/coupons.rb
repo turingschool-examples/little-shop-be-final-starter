@@ -4,6 +4,7 @@ FactoryBot.define do
     full_name { "Discount Coupon" }
     sequence(:code) { |n| "CODE#{n}" }
     active { true }
+    usage_count { 0 } 
 
     percent_off { 10.0 }
     dollar_off { nil }
