@@ -9,6 +9,7 @@ RSpec.describe Coupon do
     it { should validate_presence_of :full_name }
     it { should validate_presence_of :code }
     it { should validate_presence_of :merchant_id }
+    it { should validate_presence_of :usage_count }
   end
 
   describe "specific attribute validations" do

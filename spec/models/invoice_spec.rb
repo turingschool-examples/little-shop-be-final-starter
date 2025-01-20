@@ -19,6 +19,7 @@ RSpec.describe Invoice do
       invoice = build(:invoice, customer: customer, merchant: merchant)
       expect(invoice).to be_valid
     end
+  end
 
   describe 'validations' do
     it { should validate_inclusion_of(:status).in_array(%w(shipped packaged returned)) }
@@ -28,12 +29,11 @@ RSpec.describe Invoice do
     let(:merchant) { create(:merchant) }
     let(:customer) { create(:customer) }
     let(:inactive_coupon) { create(:coupon, active: false)}
+   
     it 'is invalied if coupon is inactive' do
       invoice = build(:invoice, coupon: inactive_coupon)
       expect(invoice).to_not be_valid
-      expect(invoice.errors[:coupon]).to include("must be active.")
-
-    
+      expect(invoice.errors[:coupon]).to include("must be active.")    
     end
   end
 
