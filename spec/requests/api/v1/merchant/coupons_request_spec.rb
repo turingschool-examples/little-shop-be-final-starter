@@ -1,6 +1,43 @@
 require "rails_helper"
 
 RSpec.describe "Merchant Coupons API", type: :request do
+  
+  describe "GET /api/v1/merchants/:merchant_id/coupons" do
+    it "returns all of a merchant's coupons" do
+      merchant = create(:merchant)
+      coupon1 = create(:coupon, merchant: merchant, full_name: "Spring Sale", code: "SPRING10")
+      coupon2 = create(:coupon, merchant: merchant, full_name: "A Spring Sale", code: "SPRING11")
+      coupon3 = create(:coupon, merchant: merchant, full_name: "The Spring Sale", code: "SPRING12")
+
+      get "/api/v1/merchants/#{merchant.id}/coupons"
+
+      json = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to be_successful
+      expect(json[:data].count).to eq(3)
+      expect(json[:data][0][:attributes][:full_name]).to eq(coupon1.full_name)
+      expect(json[:data][0][:id]).to eq(coupon1.id.to_s)
+      expect(json[:data][1][:id]).to eq(coupon2.id.to_s)
+      expect(json[:data][2][:id]).to eq(coupon3.id.to_s)
+    end
+  end
+
+  describe "POST /api/v1/merchants/:merchant_id/coupons" do
+    it "should create a coupon when all fields are provided" do
+      merchant = create(:merchant)
+      coupon_attributes = attributes_for(:coupon, full_name: "Spring Sale", code: "SPRING10")
+
+      post "/api/v1/merchants/#{merchant.id}/coupons", params: { coupon: coupon_attributes }
+  
+      json = JSON.parse(response.body, symbolize_names: true)
+  
+      expect(response).to have_http_status(:created)
+      expect(json[:data][:attributes][:full_name]).to eq("Spring Sale")
+      expect(json[:data][:attributes][:code]).to eq("SPRING10")
+    end
+  end
+  
+  
   describe "GET /api/v1/merchants/:merchant_id/coupons/:id" do
     it "returns merchant's coupon by coupon id" do
       merchant = create(:merchant)
@@ -11,9 +48,9 @@ RSpec.describe "Merchant Coupons API", type: :request do
       json = JSON.parse(response.body, symbolize_names: true)
 
       expect(response).to be_successful
-      expect(json[:data][:id]).to eq(coupon.id)
+      expect(json[:data][:id]).to eq(coupon.id.to_s)
       expect(json[:data][:type]).to eq("coupon")
-      expect(json[:data][:attributes][:name]).to eq("Spring Sale")
+      expect(json[:data][:attributes][:full_name]).to eq("Spring Sale")
       expect(json[:data][:attributes][:code]).to eq("SPRING10")
       expect(json[:data][:attributes][:merchant_id]).to eq(merchant.id)
       expect(json[:data][:attributes][:usage_count]).to eq(coupon.invoices.count)
