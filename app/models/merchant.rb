@@ -1,12 +1,12 @@
 class Merchant < ApplicationRecord
-  validates_presence_of :name
   has_many :items, dependent: :destroy
   has_many :invoices, dependent: :destroy
   has_many :customers, through: :invoices
   has_many :coupons
   # has_many :invoice_items, through: :invoices
   # has_many :transactions, through: :invoices
-
+  validates_presence_of :name
+ 
   def self.sorted_by_creation
     Merchant.order("created_at DESC")
   end
@@ -42,5 +42,6 @@ class Merchant < ApplicationRecord
 
   def self.find_one_merchant_by_name(name)
     Merchant.find_all_by_name(name).order("LOWER(name)").first
-  end
+  end 
+  
 end
