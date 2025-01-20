@@ -34,7 +34,21 @@ class Api::V1::Merchants::CouponsController < ApplicationController
       render json: { error: coupon.errors.full_messages.to_sentence }, status: :unprocessable_entity
     end
   end
+
+  def activate 
+    merchant = Merchant.find(params[:merchant_id])
+    coupon = merchant.coupons.find(params[:id])
+
+    if coupon.active
+      render json: { message: "Coupon is already active."}, status: :unprocessable_entity
+    elsif coupon.update(active: true)
+      render json: CouponSerializer.new(coupon), status: :ok
+    end
+    rescue ActiveRecord::RecordNotFound
+      render json: { error: "Coupon not found" }, status: :not_found
+  end
   
+
   def show
     begin
       merchant = Merchant.find(params[:merchant_id])
@@ -42,21 +56,6 @@ class Api::V1::Merchants::CouponsController < ApplicationController
 
       usage_count = coupon.invoices.count 
 
-      # render json: {
-      #   data: {
-      #     id: coupon.id,
-      #     type: "coupon",
-      #     attributes: {
-      #       name: coupon.full_name,
-      #       code: coupon.code,
-      #       percent_off: coupon.percent_off,
-      #       dollar_off: coupon.dollar_off,
-      #       active: coupon.active,
-      #       merchant_id: coupon.merchant_id,
-      #       usage_count: usage_count
-      #     }
-      #   }
-      # }
       render json: CouponSerializer.new(coupon), status: :ok 
     rescue ActiveRecord::RecordNotFound
       render json: { error: 'Coupon not found' }, status: :not_found

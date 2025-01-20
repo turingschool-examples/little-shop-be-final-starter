@@ -75,6 +75,44 @@ RSpec.describe "Merchant Coupons API", type: :request do
       expect(json[:error]).to eq("only one discount type (percent or dollar off) can be specified at a time.")
     end
   end
+
+  describe "Update a Coupon -- PATCH /api/v1/merchants/:merchant_id/coupon" do
+    let(:merchant) { create(:merchant) }
+    it "updates an inactive coupon to active" do
+      coupon = create(:coupon, merchant: merchant, full_name: "Spring Sale", code: "SPRING10", active: false) 
+
+      patch "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}/activate"
+
+      json = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to be_successful
+      expect(json[:data][:attributes][:active]).to eq(true)
+    end
+
+    it "returns an error if the coupon is already active" do
+      coupon = create(:coupon, merchant: merchant, full_name: "Spring Sale", code: "SPRING10", active: true) 
+
+      patch "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}/activate"
+
+      json = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to_not be_successful
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json[:message]).to eq("Coupon is already active.")
+    end
+
+    it "returns an error if the coupon cannot be found" do
+      coupon = create(:coupon, merchant: merchant, full_name: "Spring Sale", code: "SPRING10", active: true) 
+
+      patch "/api/v1/merchants/#{merchant.id}/coupons/9999999999/activate"
+
+      json = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to_not be_successful
+      expect(response).to have_http_status(:not_found)
+      expect(json[:error]).to eq("Coupon not found")
+    end
+  end
   
   
   describe "Show a Coupon -- GET /api/v1/merchants/:merchant_id/coupons/:id" do
