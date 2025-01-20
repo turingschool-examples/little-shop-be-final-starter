@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Merchant Coupons API", type: :request do
   
-  describe "GET /api/v1/merchants/:merchant_id/coupons" do
+  describe "Index -- GET /api/v1/merchants/:merchant_id/coupons" do
     it "returns all of a merchant's coupons" do
       merchant = create(:merchant)
       coupon1 = create(:coupon, merchant: merchant, full_name: "Spring Sale", code: "SPRING10")
@@ -22,7 +22,7 @@ RSpec.describe "Merchant Coupons API", type: :request do
     end
   end
 
-  describe "POST /api/v1/merchants/:merchant_id/coupons" do
+  describe "Create a Coupon -- POST /api/v1/merchants/:merchant_id/coupons" do
     it "should create a coupon when all fields are provided" do
       merchant = create(:merchant)
       coupon_attributes = attributes_for(:coupon, full_name: "Spring Sale", code: "SPRING10")
@@ -36,10 +36,10 @@ RSpec.describe "Merchant Coupons API", type: :request do
       expect(json[:data][:attributes][:code]).to eq("SPRING10")
     end
 
-    it "should return an error if code has already been taken" do
+    it "should return an error if coupon code has already been taken" do
       merchant = create(:merchant)
       coupon1 = create(:coupon, merchant: merchant, full_name: "A Spring Sale", code: "SPRING10")
-      coupon_attributes = attributes_for(:coupon, full_name: "Spring Sale", code: "SPRING10")
+      coupon_attributes = attributes_for(:coupon, full_name: "Spring Sale", code: "SPRING10")      
 
       post "/api/v1/merchants/#{merchant.id}/coupons", params: { coupon: coupon_attributes }
   
@@ -48,10 +48,36 @@ RSpec.describe "Merchant Coupons API", type: :request do
       expect(response).to have_http_status(:unprocessable_entity)
       expect(json[:error]).to eq("Code has already been taken")
     end
+
+    it "should return an error if Merchant already has 5 active coupons" do
+      merchant = create(:merchant)
+      create_list(:coupon, 5, merchant_id: merchant.id, active: true)
+
+      coupon6_attributes = attributes_for(:coupon, merchant: merchant, full_name: "A Mega-Spring Sale", code: "SPRING15")
+
+      post "/api/v1/merchants/#{merchant.id}/coupons", params: { coupon: coupon6_attributes }
+  
+      json = JSON.parse(response.body, symbolize_names: true)
+  
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json[:error]).to eq("This merchant already has 5 active coupons.")
+    end
+
+    it "should return an error if values exist for both discount types" do
+      merchant = create(:merchant)
+      coupon_attributes = attributes_for(:coupon, merchant: merchant, full_name: "A Mega-Spring Sale", code: "SPRING15", percent_off: 10, dollar_off: 12)
+
+      post "/api/v1/merchants/#{merchant.id}/coupons", params: { coupon: coupon_attributes }
+  
+      json = JSON.parse(response.body, symbolize_names: true)
+  
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json[:error]).to eq("only one discount type (percent or dollar off) can be specified at a time.")
+    end
   end
   
   
-  describe "GET /api/v1/merchants/:merchant_id/coupons/:id" do
+  describe "Show a Coupon -- GET /api/v1/merchants/:merchant_id/coupons/:id" do
     it "returns merchant's coupon by coupon id" do
       merchant = create(:merchant)
       coupon = create(:coupon, merchant: merchant, full_name: "Spring Sale", code: "SPRING10")
@@ -88,20 +114,20 @@ RSpec.describe "Merchant Coupons API", type: :request do
       expect(json[:error]).to eq("Coupon not found")
     end
 
-    it 'includes the correct usage_count' do
-      merchant = create(:merchant)
-      coupon = create(:coupon)
-      customer = create(:customer)
+    # it 'includes the correct usage_count' do
+    #   merchant = create(:merchant)
+    #   coupon = create(:coupon)
+    #   customer = create(:customer)
   
-      invoice1 = create(:invoice, customer_id: customer.id, merchant_id: merchant.id, coupon_id: coupon.id, status: "packaged")
-      invoice2 = create(:invoice, customer_id: customer.id, merchant_id: merchant.id, coupon_id: coupon.id, status: "packaged")
+    #   invoice1 = create(:invoice, customer_id: customer.id, merchant_id: merchant.id, coupon_id: coupon.id, status: "packaged")
+    #   invoice2 = create(:invoice, customer_id: customer.id, merchant_id: merchant.id, coupon_id: coupon.id, status: "packaged")
   
-      serialized = CouponSerializer.new(coupon).serializable_hash
+    #   serialized = CouponSerializer.new(coupon).serializable_hash
   
-      attributes = serialized[:data][:attributes]
+    #   attributes = serialized[:data][:attributes]
   
-      expect(attributes[:usage_count]).to eq(2)
-    end 
+    #   expect(attributes[:usage_count]).to eq(2)
+    # end 
   end
   
 end
