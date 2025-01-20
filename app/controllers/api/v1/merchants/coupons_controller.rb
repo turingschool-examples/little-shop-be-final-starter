@@ -22,7 +22,7 @@ class Api::V1::Merchants::CouponsController < ApplicationController
       }
       # render json: CouponSerializer.new(coupon), status: :ok 
     rescue ActiveRecord::RecordNotFound
-      render json: { error: 'Coupon not found' }, status: not_found
+      render json: { error: 'Coupon not found' }, status: :not_found
     end
   end
 end

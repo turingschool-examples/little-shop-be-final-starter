@@ -17,11 +17,11 @@ RSpec.describe "Merchant Coupons API", type: :request do
       expect(json[:data][:attributes][:code]).to eq("SPRING10")
       expect(json[:data][:attributes][:merchant_id]).to eq(merchant.id)
     end
-  end
+  
 
-  it "returns a 404 error if the coupon does not exist for the given merchant" do
+    it "returns a 404 error if the coupon does not exist for the given merchant" do
       merchant = create(:merchant)
-      
+        
       get "/api/v1/merchants/#{merchant.id}/coupons/99999"
 
       json = JSON.parse(response.body, symbolize_names: true)
@@ -29,15 +29,15 @@ RSpec.describe "Merchant Coupons API", type: :request do
 
       expect(response).to have_http_status(:not_found)
       expect(json[:error]).to eq("Coupon not found")
-  end
+    end
 
     it "returns a 404 error if the merchant does not exist" do
-      get "/api/v1/merchants/99999/coupons/1"
-
-      json = JSON.parse(response.body, symbolize_names: true)
-
-      expect(response).to have_http_status(:not_found)
+      get "/api/v1/merchants/99999/coupons/1" 
+      json = JSON.parse(response.body, symbolize_names: true) 
+      
+      expect(response).to have_http_status(:not_found) 
       expect(json[:error]).to eq("Coupon not found")
     end
   end
+  
 end
