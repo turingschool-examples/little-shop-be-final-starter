@@ -44,30 +44,37 @@ class Api::V1::Merchants::CouponsController < ApplicationController
 
   def activate
     coupon = Coupon.find_by(id: params[:id])
+    active_coupon_count = @merchant.coupons.where(status: 'active').count
   
     if coupon.nil?
-      render json: { error: 'Coupon not found' }, status: :not_found
-    else
-      coupon.activate!
-      render json: {
-        message: "Coupon activated successfully!",
-        status: :ok
-      }
+      return render json: ErrorSerializer.format_invalid_search_response(coupon), status: :not_found
     end
+
+    if active_coupon_count >= 5
+      return render json: { error: 'A merchant can only have up to 5 active coupons at a time' }, status: :unprocessable_entity
+    end
+
+    coupon.activate!
+    
+    render json: {
+      message: "Coupon activated successfully!",
+      status: :ok
+    }
   end
 
   def deactivate
     coupon = Coupon.find_by(id: params[:id])
   
     if coupon.nil?
-      render json: { error: 'Coupon not found' }, status: :not_found
-    else
-      coupon.deactivate!
-      render json: {
-        message: "Coupon deactivated successfully.",
-        status: :ok
-      }
+      return render json: ErrorSerializer.format_invalid_search_response(coupon), status: :not_found
     end
+    
+    coupon.deactivate!
+
+    render json: {
+      message: "Coupon deactivated successfully.",
+      status: :ok
+    }
   end
 
 
