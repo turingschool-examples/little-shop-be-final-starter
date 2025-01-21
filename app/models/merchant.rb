@@ -1,12 +1,10 @@
 class Merchant < ApplicationRecord
   validates_presence_of :name
+  has_many :invoices, dependent: :destroy  # Ensure this comes first
+  has_many :customers, through: :invoices  # This should be after invoices
   has_many :items, dependent: :destroy
-  has_many :invoices, dependent: :destroy
-  has_many :customers, through: :invoices
-  has_many :coupons # This allows us to call merchant.coupons
-  
-  # has_many :invoice_items, through: :invoices
-  # has_many :transactions, through: :invoices
+  has_many :coupons, dependent: :destroy # This allows us to call merchant.coupons
+  has_many :invoice_items, through: :invoices
 
   def self.sorted_by_creation
     Merchant.order("created_at DESC")
