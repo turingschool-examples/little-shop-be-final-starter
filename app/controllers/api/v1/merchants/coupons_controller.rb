@@ -4,16 +4,20 @@ class Api::V1::Merchants::CouponsController < ApplicationController
   def index
     coupons = @merchant.coupons
     valid_statuses = ["active", "inactive"] 
-
+  
     if params[:status].present? && !valid_statuses.include?(params[:status])
-      render json: ErrorSerializer.format_errors(["Invalid coupon status"]), status: :bad_request
+      return render json: ErrorSerializer.format_errors(["Invalid coupon status"]), status: :bad_request
     end
-    
+  
+    if params[:status].present?
+      coupons = coupons.where(status: params[:status])
+    end
+  
     if coupons.empty?
-      render json: ErrorSerializer.format_errors(["No coupons found for this merchant"]), status: :not_found
-    else
-      render json: CouponSerializer.new(coupons), status: :ok
+      return render json: ErrorSerializer.format_errors(["No coupons found for this merchant"]), status: :not_found
     end
+  
+    render json: CouponSerializer.new(coupons), status: :ok
   end
 
   def show
