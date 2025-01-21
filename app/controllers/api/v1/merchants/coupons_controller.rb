@@ -35,18 +35,57 @@ class Api::V1::Merchants::CouponsController < ApplicationController
     end
   end
 
-  def activate 
+  def update
     merchant = Merchant.find(params[:merchant_id])
-    coupon = merchant.coupons.find(params[:id])
+    coupon = Coupon.find(params[:id])
 
-    if coupon.active
-      render json: { message: "Coupon is already active."}, status: :unprocessable_entity
-    elsif coupon.update(active: true)
-      render json: CouponSerializer.new(coupon), status: :ok
+    new_active_status = !coupon.active
+
+    if new_active_status && coupon.more_than_five_active_coupons?(merchant)
+      coupon.errors.add(:base, "This merchant already has 5 active coupons.")
+      render json: { errors: coupon.errors.full_messages }, status: :unprocessable_entity
+    else
+      coupon.update!(active: new_active_status)
+      render json: coupon
     end
-    rescue ActiveRecord::RecordNotFound
-      render json: { error: "Coupon not found" }, status: :not_found
+    rescue ActiveRecord::RecordNotFound => e
+    render json: { error: "Could not find merchant or coupon" }, status: :not_found
+    rescue StandardError => e
+    render json: { error: e.message }, status: :unprocessable_entity
+    #   if params[:active] && !coupon.more_than_five_active_coupons?(merchant)
+    #     coupon.update!(coupon_params)
+    # elsif !params[:active]
+    #   coupon.update!(coupon_params)
+    # elsif merchant && merchant.coupons.where(active: true).count >= 5
+    #   errors.add(:base, "This merchant already has 5 active coupons.")
+    # end
   end
+
+  # def activate 
+  #   merchant = Merchant.find(params[:merchant_id])
+  #   coupon = merchant.coupons.find(params[:id])
+
+  #   if coupon.active
+  #     render json: { message: "Coupon is already active."}, status: :unprocessable_entity
+  #   elsif coupon.update(active: true)
+  #     render json: CouponSerializer.new(coupon), status: :ok
+  #   end
+  #   rescue ActiveRecord::RecordNotFound
+  #     render json: { error: "Coupon not found" }, status: :not_found
+  # end
+
+  # def deactivate 
+  #   merchant = Merchant.find(params[:merchant_id])
+  #   coupon = merchant.coupons.find(params[:id])
+
+  #   if coupon.active == false
+  #     render json: { message: "Coupon is already inactive."}, status: :unprocessable_entity
+  #   elsif coupon.update(active: false)
+  #     render json: CouponSerializer.new(coupon), status: :ok
+  #   end
+  #   rescue ActiveRecord::RecordNotFound
+  #     render json: { error: "Coupon not found" }, status: :not_found
+  # end
   
 
   def show

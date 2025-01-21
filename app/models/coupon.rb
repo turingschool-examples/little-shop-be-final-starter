@@ -8,8 +8,11 @@ class Coupon < ApplicationRecord
   validates :merchant_id, presence: true 
   validates :usage_count, presence: true
   validate :discount_type_constraints
-  validate :merchant_coupon_limit_to_five, on: :create
-
+  validate :merchant_coupon_limit_to_five  
+  
+  def more_than_five_active_coupons?(merchant)
+    merchant.coupons.where(active: true).count >= 5
+  end
 
   private
 
@@ -20,11 +23,12 @@ class Coupon < ApplicationRecord
       errors.add(:base, "only one discount type (percent or dollar off) can be specified at a time.")
     end
   end 
-end
 
-def merchant_coupon_limit_to_five 
-  if merchant && merchant.coupons.where(active: true).count >= 5
-    errors.add(:base, "This merchant already has 5 active coupons.")
+
+  def merchant_coupon_limit_to_five 
+    if active? && merchant && merchant.coupons.where(active: true).count >= 5
+      errors.add(:base, "This merchant already has 5 active coupons.")
+    end
   end
 end
 
