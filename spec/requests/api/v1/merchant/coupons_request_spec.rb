@@ -160,6 +160,31 @@ RSpec.describe "Merchant Coupon endpoints" do
       expect(JSON.parse(response.body)).to eq(expected_error)
     end
 
+    it 'displays error when coupon code already exists' do
+      coupon4 = create(:coupon, merchant: @merchant1, name: "Spring Sale", code: "SPRING2025", percent_off: 10)
+
+      new_coupon_params = {
+        coupon: {
+          name: "Summer Sale",
+          code: "SPRING2025",  # Same code as coupon1
+          percent_off: 20
+        }
+      }
+      
+      headers = { "CONTENT_TYPE" => "application/json" }
+
+      post api_v1_merchant_coupons_path(@merchant1), headers: headers, params: JSON.generate(new_coupon_params)
+    
+      expect(response.status).to eq(422)
+    
+      expected_error = {
+        "message" => "Coupon could not be created",
+        "errors" => ["Code has already been taken"]
+      }
+
+      expect(JSON.parse(response.body)).to eq(expected_error)
+    end
+
 
   end
 
