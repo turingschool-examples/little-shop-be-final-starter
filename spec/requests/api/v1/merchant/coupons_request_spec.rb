@@ -12,7 +12,17 @@ RSpec.describe "Merchant Coupon endpoints" do
 
     @merchant3 = create(:merchant)
   end
-
+  
+  context 'when the merchant_id provided does not exist' do
+    it 'returns a not_found error' do
+      invalid_merchant_id = 999999
+      get api_v1_merchant_coupons_path(invalid_merchant_id)
+      expect(response).to have_http_status(:not_found)
+      json = JSON.parse(response.body)
+      expect(json['errors']).to include('Merchant not found')
+    end
+  end
+  
   describe "#INDEX" do 
     it "should return all of a merchant's coupons" do
       get "/api/v1/merchants/#{@merchant1.id}/coupons"
@@ -203,6 +213,25 @@ RSpec.describe "Merchant Coupon endpoints" do
         json = JSON.parse(response.body)
 
         expect(json['message']).to eq('Coupon not found')
+      end
+    end
+
+    context 'when the merchant already has 5 coupons' do
+      before do
+        5.times do
+          create(:coupon, merchant: @merchant3, status: 'active')
+        end
+      end
+
+      it 'does not allow a 6th active coupon and returns an error' do
+        coupon_to_activate = create(:coupon, merchant: @merchant3, status: 'pending')
+
+        patch activate_api_v1_merchant_coupon_path(@merchant3, id: coupon_to_activate.id)
+
+        expect(response).to have_http_status(:unprocessable_entity)
+
+        json = JSON.parse(response.body)
+        expect(json['error']).to eq('A merchant can only have up to 5 active coupons at a time')
       end
     end
   end

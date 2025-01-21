@@ -81,7 +81,6 @@ class Api::V1::Merchants::CouponsController < ApplicationController
   private
   def set_merchant
     @merchant = Merchant.find_by(id: params[:merchant_id])
-  rescue ActiveRecord::RecordNotFound
     render json: ErrorSerializer.format_errors(["Merchant not found"]), status: :not_found unless @merchant
   end
   
