@@ -21,11 +21,7 @@ Rails.application.routes.draw do
         resources :find_all, only: :index, controller: :search
       end
       resources :merchants, except: [:new, :edit] do
-        resources :coupons, except: [:destroy], controller: "merchants/coupons" do
-          # patch :activate, on: :member
-          # patch :deactivate, on: :member
-          # generates PATCH /api/v1/merchants/:merchant_id/coupons/:id/activate
-        end
+        resources :coupons, except: [:destroy], controller: "merchants/coupons" 
         resources :items, only: :index, controller: "merchants/items"
         resources :customers, only: :index, controller: "merchants/customers"
         resources :invoices, only: :index, controller: "merchants/invoices"

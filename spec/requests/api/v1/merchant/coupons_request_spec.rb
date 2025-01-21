@@ -80,104 +80,54 @@ RSpec.describe "Merchant Coupons API", type: :request do
 
   describe "Update a Coupon -- PATCH /api/v1/merchants/:merchant_id/coupon" do
     let(:merchant) { create(:merchant) }
-    describe "Activate a Coupon" do
-      it "activates an inactive coupon" do
-        coupon = create(:coupon, merchant: merchant, full_name: "Spring Sale", code: "SPRING10", active: false) 
+    it "activates an inactive coupon" do
+      coupon = create(:coupon, merchant: merchant, full_name: "Spring Sale", code: "SPRING10", active: false) 
 
-        patch "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}", params:{ active: true}
+      patch "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}", params:{ active: true}
 
-        json = JSON.parse(response.body, symbolize_names: true)
+      json = JSON.parse(response.body, symbolize_names: true)
 
-        expect(response).to be_successful
-        expect(json[:active]).to eq(true)
-      end
-
-      it "inactivates an active coupon" do
-        coupon = create(:coupon, merchant: merchant, full_name: "Spring Sale", code: "SPRING10", active: true) 
-
-        patch "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}", params:{ active: false}
-
-        json = JSON.parse(response.body, symbolize_names: true)
-
-        expect(response).to be_successful
-        expect(json[:active]).to eq(false)
-      end
-
-      it "returns an error when the merchant already has 5 active coupons" do
-        5.times { create(:coupon, merchant: merchant, active: true) }
-        inactive_coupon = create(:coupon, merchant: merchant, active: false)
-  
-        patch "/api/v1/merchants/#{merchant.id}/coupons/#{inactive_coupon.id}", params:{ active: true}
-
-        json = JSON.parse(response.body, symbolize_names: true)
-
-        expect(response).to_not be_successful
-        expect(response).to have_http_status(:unprocessable_entity)
-        expect(json[:errors][0]).to eq("This merchant already has 5 active coupons.")
-      end
-
-      xit "updates an inactive coupon to active" do
-        coupon = create(:coupon, merchant: merchant, full_name: "Spring Sale", code: "SPRING10", active: false) 
-
-        patch "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}", params:{ active: true}
-
-        json = JSON.parse(response.body, symbolize_names: true)
-
-        expect(response).to be_successful
-        expect(json[:data][:attributes][:active]).to eq(true)
-      end
-
-      xit "returns an error if the coupon is already active" do
-        coupon = create(:coupon, merchant: merchant, full_name: "Spring Sale", code: "SPRING10", active: true) 
-
-        patch "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}/activate"
-
-        json = JSON.parse(response.body, symbolize_names: true)
-
-        expect(response).to_not be_successful
-        expect(response).to have_http_status(:unprocessable_entity)
-        expect(json[:message]).to eq("Coupon is already active.")
-       end
-
-      xit "returns an error if the coupon cannot be found" do
-        coupon = create(:coupon, merchant: merchant, full_name: "Spring Sale", code: "SPRING10", active: true) 
-
-        patch "/api/v1/merchants/#{merchant.id}/coupons/9999999999/activate"
-
-        json = JSON.parse(response.body, symbolize_names: true)
-
-        expect(response).to_not be_successful
-        expect(response).to have_http_status(:not_found)
-        expect(json[:error]).to eq("Coupon not found")
-      end
+      expect(response).to be_successful
+      expect(json[:active]).to eq(true)
     end
 
-    describe "Deactivate a Coupon" do
-      xit "updates an active coupon to inactive" do
-        coupon = create(:coupon, merchant: merchant, full_name: "Spring Sale", code: "SPRING10", active: true) 
+    it "inactivates an active coupon" do
+      coupon = create(:coupon, merchant: merchant, full_name: "Spring Sale", code: "SPRING10", active: true) 
 
-        patch "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}/deactivate"
+      patch "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}", params:{ active: false}
 
-        json = JSON.parse(response.body, symbolize_names: true)
+      json = JSON.parse(response.body, symbolize_names: true)
 
-        expect(response).to be_successful
-        expect(json[:data][:attributes][:active]).to eq(false)
-      end
+      expect(response).to be_successful
+      expect(json[:active]).to eq(false)
+    end
 
-      xit "returns an error if the coupon is already inactive" do
-        coupon = create(:coupon, merchant: merchant, full_name: "Spring Sale", code: "SPRING10", active: true) 
-
-        patch "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}/deactivate"
-
-        json = JSON.parse(response.body, symbolize_names: true)
-
-        expect(response).to_not be_successful
-        # expect(response).to have_http_status(:unprocessable_entity)
-        # expect(json[:message]).to eq("Coupon is already inactive.")
-      end
-    end 
-  end
+    it "returns an error when the merchant already has 5 active coupons" do
+      5.times { create(:coupon, merchant: merchant, active: true) }
+      inactive_coupon = create(:coupon, merchant: merchant, active: false)
   
+      patch "/api/v1/merchants/#{merchant.id}/coupons/#{inactive_coupon.id}", params:{ active: true}
+
+      json = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to_not be_successful
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json[:errors][0]).to eq("This merchant already has 5 active coupons.")
+    end
+
+    it "returns an error if the coupon cannot be found" do
+      coupon = create(:coupon, merchant: merchant, full_name: "Spring Sale", code: "SPRING10", active: true) 
+
+      patch "/api/v1/merchants/#{merchant.id}/coupons/9999999999"
+      
+      json = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to_not be_successful
+      expect(response).to have_http_status(:not_found)
+      expect(json[:error]).to eq("Coupon not found")
+    end
+  end
+
   describe "Show a Coupon -- GET /api/v1/merchants/:merchant_id/coupons/:id" do
     it "returns merchant's coupon by coupon id" do
       merchant = create(:merchant)
