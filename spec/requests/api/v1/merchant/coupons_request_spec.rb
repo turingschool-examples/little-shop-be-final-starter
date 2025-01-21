@@ -79,8 +79,8 @@ RSpec.describe "Merchant Coupon endpoints" do
         
         json = JSON.parse(response.body, symbolize_names: true)
 
-        expect(response).to have_http_status(:not_found)
-        expect(json[:errors]).to include("No coupons found for this merchant")
+        expect(response).to have_http_status(:bad_request)
+        expect(json[:errors]).to include("Invalid coupon status")
       end
     end
   end
@@ -175,7 +175,7 @@ RSpec.describe "Merchant Coupon endpoints" do
         expect(response).to have_http_status(:not_found)
         json = JSON.parse(response.body)
 
-        expect(json['error']).to eq('Coupon not found')
+        expect(json['message']).to eq('Coupon not found')
       end
     end
   end
@@ -202,7 +202,7 @@ RSpec.describe "Merchant Coupon endpoints" do
         expect(response).to have_http_status(:not_found)
         json = JSON.parse(response.body)
 
-        expect(json['error']).to eq('Coupon not found')
+        expect(json['message']).to eq('Coupon not found')
       end
     end
   end

@@ -47,7 +47,7 @@ class Api::V1::Merchants::CouponsController < ApplicationController
     active_coupon_count = @merchant.coupons.where(status: 'active').count
   
     if coupon.nil?
-      return render json: ErrorSerializer.format_invalid_search_response(coupon), status: :not_found
+      return render json: ErrorSerializer.format_invalid_search_response, status: :not_found
     end
 
     if active_coupon_count >= 5
@@ -66,7 +66,7 @@ class Api::V1::Merchants::CouponsController < ApplicationController
     coupon = Coupon.find_by(id: params[:id])
   
     if coupon.nil?
-      return render json: ErrorSerializer.format_invalid_search_response(coupon), status: :not_found
+      return render json: ErrorSerializer.format_invalid_search_response, status: :not_found
     end
     
     coupon.deactivate!
