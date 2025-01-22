@@ -48,4 +48,35 @@ RSpec.describe "Merchant Coupons Index", type: :request do
             expect(json[:data][:attributes][:usage_count]).to eq(1) # used 1 time, else you have issues in DB with repeaters
         end
     end
+
+    describe "Merchant Coupons Create" do
+        it "creates a coupon successfully" do
+            merchant = create(:merchant)
+            coupon_params = { name: "New Discount", code: "BOGO50", discount_type: "percent_off", discount_amount: 20, status: "active" }
+        
+            post "/api/v1/merchants/#{merchant.id}/coupons", params: { coupon: coupon_params }
+        
+            expect(response).to have_http_status(:created)
+
+            json = JSON.parse(response.body, symbolize_names: true)
+
+            expect(json[:data][:attributes][:name]).to eq("New Discount")
+            expect(json[:data][:attributes][:code]).to eq("BOGO50")
+        end
+      
+        it "does not allow more than 5 active coupons" do
+            merchant = create(:merchant)
+            create_list(:coupon, 5, merchant: merchant, status: "active")
+        
+            coupon_params = { name: "Extra Discount", code: "BOGO50", discount_type: "percent_off", discount_amount: 50, status: "active" }
+
+            post "/api/v1/merchants/#{merchant.id}/coupons", params: { coupon: coupon_params }
+        
+            expect(response).to have_http_status(:unprocessable_entity)
+
+            json = JSON.parse(response.body, symbolize_names: true)
+
+            expect(json[:error]).to eq("Merchant cannot have more than 5 active coupons")
+        end
+      end
 end

@@ -10,14 +10,19 @@ class Coupon < ApplicationRecord
   
     validate :merchant_cannot_have_more_than_five_active_coupons
     before_destroy :prevent_deletion
+
+    scope :active, -> { where(status: "active") }
   
     private
   
     def merchant_cannot_have_more_than_five_active_coupons
-      if status == "active" && merchant.coupons.where(status: "active").count >= 5
-        errors.add(:merchant, "can only have up to 5 active coupons at a time") 
+      return unless status == "active"
+  
+      if merchant.coupons.active.count >= 5
+        errors.add(:merchant, "can only have up to 5 active coupons at a time")
       end
     end
+  
   
     def prevent_deletion
       errors.add(:base, "Coupons cannot be deleted. They can only be activated or deactivated.")
