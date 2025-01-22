@@ -43,6 +43,17 @@ class Api::V1::Merchants::CouponsController < ApplicationController
         end
       end
 
+    def deactivate
+        merchant = Merchant.find(params[:merchant_id])
+        coupon = merchant.coupons.find(params[:id])
+        
+        if coupon.update(status: "inactive")
+            render json: CouponSerializer.new(coupon), status: :ok
+        else
+            render json: { error: coupon.errors.full_messages.to_sentence }, status: :unprocessable_entity
+        end
+    end
+
     private
 
     def coupon_params

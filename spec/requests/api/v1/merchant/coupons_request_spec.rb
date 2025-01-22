@@ -79,4 +79,20 @@ RSpec.describe "Merchant Coupons Index", type: :request do
             expect(json[:error]).to eq("Merchant cannot have more than 5 active coupons")
         end
       end
+
+    def deactivate
+        merchant = Merchant.find(params[:merchant_id])
+        coupon = merchant.coupons.find_by(id: params[:id]) # Use `find_by` to avoid exceptions
+      
+        if coupon.nil?
+          render json: { error: "Coupon not found" }, status: :not_found
+          return
+        end
+      
+        if coupon.update(status: "inactive")
+          render json: CouponSerializer.new(coupon), status: :ok
+        else
+          render json: { error: coupon.errors.full_messages.to_sentence }, status: :unprocessable_entity
+        end
+    end
 end
